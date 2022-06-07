@@ -72,11 +72,25 @@ func StatusInfoHandler(w http.ResponseWriter, r *http.Request) {
 	if exist {
 		status = statusVals[0]
 	}
-	res, err := swapapi.GetStatusInfo(status)
+	res, err := swapapi.GetStatusInfo("", status)
 	writeResponse(w, res, err)
 }
 
 func getRouterSwapKeys(r *http.Request) (chainID, txid, logIndex string) {
+	vars := mux.Vars(r)
+	chainID = vars["chainid"]
+	txid = vars["txid"]
+
+	vals := r.URL.Query()
+	logIndex = "0"
+	logIndexVals, exist := vals["logindex"]
+	if exist {
+		logIndex = logIndexVals[0]
+	}
+	return chainID, txid, logIndex
+}
+
+func GetRouterSwapKeys(r *http.Request) (chainID, txid, logIndex string) {
 	vars := mux.Vars(r)
 	chainID = vars["chainid"]
 	txid = vars["txid"]
@@ -119,7 +133,7 @@ func TestRouterSwapHandler(w http.ResponseWriter, r *http.Request) {
 // GetRouterSwapHandler handler
 func GetRouterSwapHandler(w http.ResponseWriter, r *http.Request) {
 	chainID, txid, logIndex := getRouterSwapKeys(r)
-	res, err := swapapi.GetRouterSwap(chainID, txid, logIndex)
+	res, err := swapapi.GetRouterSwap("", chainID, txid, logIndex)
 	writeResponse(w, res, err)
 }
 
@@ -159,7 +173,7 @@ func GetRouterSwapHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeResponse(w, nil, err)
 	} else {
-		res, err := swapapi.GetRouterSwapHistory(chainID, address, offset, limit, status)
+		res, err := swapapi.GetRouterSwapHistory("", chainID, address, offset, limit, status)
 		writeResponse(w, res, err)
 	}
 }

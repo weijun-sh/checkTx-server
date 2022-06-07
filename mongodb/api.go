@@ -156,17 +156,20 @@ func FindRouterSwap(fromChainID, txid string, logindex int) (*MgoSwap, error) {
 }
 
 // FindRouterSwapAuto find router swap
-func FindRouterSwapAuto(fromChainID, txid string, logindex int) (*MgoSwap, error) {
+func FindRouterSwapAuto(dbname, fromChainID, txid string, logindex int) (*MgoSwap, error) {
 	if logindex == 0 {
-		return findFirstRouterSwap(fromChainID, txid)
+		return findFirstRouterSwap(dbname, fromChainID, txid)
 	}
 	return FindRouterSwap(fromChainID, txid, logindex)
 }
 
-func findFirstRouterSwap(fromChainID, txid string) (*MgoSwap, error) {
+func findFirstRouterSwap(dbname, fromChainID, txid string) (*MgoSwap, error) {
+	tablename := tbRouterSwaps
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
 	result := &MgoSwap{}
 	query := getChainAndTxIDQuery(fromChainID, txid)
-	err := collRouterSwap.FindOne(clientCtx, query).Decode(result)
+	err := c.FindOne(clientCtx, query).Decode(result)
 	if err != nil {
 		return nil, mgoError(err)
 	}
@@ -384,17 +387,22 @@ func FindRouterSwapResult(fromChainID, txid string, logindex int) (*MgoSwapResul
 }
 
 // FindRouterSwapResultAuto find router swap result
-func FindRouterSwapResultAuto(fromChainID, txid string, logindex int) (*MgoSwapResult, error) {
+func FindRouterSwapResultAuto(dbname, fromChainID, txid string, logindex int) (*MgoSwapResult, error) {
 	if logindex == 0 {
-		return findFirstRouterSwapResult(fromChainID, txid)
+		return findFirstRouterSwapResult(dbname, fromChainID, txid)
 	}
 	return FindRouterSwapResult(fromChainID, txid, logindex)
 }
 
-func findFirstRouterSwapResult(fromChainID, txid string) (*MgoSwapResult, error) {
+func findFirstRouterSwapResult(dbname, fromChainID, txid string) (*MgoSwapResult, error) {
+	fmt.Printf("TestSwitchDB, txhash: %v\n", txid)
+	tablename := tbRouterSwapResults
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
+
 	result := &MgoSwapResult{}
 	query := getChainAndTxIDQuery(fromChainID, txid)
-	err := collRouterSwapResult.FindOne(clientCtx, query).Decode(result)
+	err := c.FindOne(clientCtx, query).Decode(result)
 	if err != nil {
 		return nil, mgoError(err)
 	}
@@ -506,6 +514,7 @@ func FindRouterSwapResultsToReplace(chainID string, septime int64) ([]*MgoSwapRe
 }
 
 func getStatusesFromStr(status string) (registerStatuses, resultStatuses []SwapStatus) {
+	fmt.Printf("getStatusInfoFromStr, status: %v\n", status)
 	parts := strings.Split(status, ",")
 	registerStatuses = make([]SwapStatus, 0, 5)
 	resultStatuses = make([]SwapStatus, 0, 5)
@@ -528,7 +537,7 @@ func getStatusesFromStr(status string) (registerStatuses, resultStatuses []SwapS
 
 // FindRouterSwapResults find router swap results with chainid and address
 //nolint:gocyclo // allow long method
-func FindRouterSwapResults(fromChainID, address string, offset, limit int, status string) ([]*MgoSwapResult, error) {
+func FindRouterSwapResults(dbname, fromChainID, address string, offset, limit int, status string) ([]*MgoSwapResult, error) {
 	var queries []bson.M
 
 	if address != "" && address != allAddresses {
@@ -543,6 +552,7 @@ func FindRouterSwapResults(fromChainID, address string, offset, limit int, statu
 	}
 
 	registerStatuses, resultStatuses := getStatusesFromStr(status)
+	fmt.Printf("FindRouterSwapResults, registerStatuses: %v, resultStatuses: %v\n", registerStatuses, resultStatuses)
 	filterStatuses, isInResultColl := resultStatuses, true
 	if len(resultStatuses) == 0 && len(registerStatuses) > 0 {
 		filterStatuses = registerStatuses
@@ -566,24 +576,27 @@ func FindRouterSwapResults(fromChainID, address string, offset, limit int, statu
 			SetSkip(int64(offset)).SetLimit(int64(-limit))
 	}
 
-	var coll *mongo.Collection
+	tablename := ""
 	if isInResultColl {
-		coll = collRouterSwapResult
+		tablename = tbRouterSwapResults
 	} else {
-		coll = collRouterSwap
+		tablename = tbRouterSwaps
 	}
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
 
 	var cur *mongo.Cursor
 	var err error
 	switch len(queries) {
 	case 0:
-		cur, err = coll.Find(clientCtx, bson.M{}, opts)
+		cur, err = c.Find(clientCtx, bson.M{}, opts)
 	case 1:
-		cur, err = coll.Find(clientCtx, queries[0], opts)
+		cur, err = c.Find(clientCtx, queries[0], opts)
 	default:
-		cur, err = coll.Find(clientCtx, bson.M{"$and": queries}, opts)
+		cur, err = c.Find(clientCtx, bson.M{"$and": queries}, opts)
 	}
 	if err != nil {
+		fmt.Printf("1 FindRouterSwapResults, err: %v\n", err)
 		return nil, mgoError(err)
 	}
 	result := make([]*MgoSwapResult, 0, 20)
@@ -597,8 +610,10 @@ func FindRouterSwapResults(fromChainID, address string, offset, limit int, statu
 		}
 	}
 	if err != nil {
+		fmt.Printf("2 FindRouterSwapResults, err: %v\n", err)
 		return nil, mgoError(err)
 	}
+	fmt.Printf("FindRouterSwapResults, result: %v\n", result)
 	return result, nil
 }
 
@@ -800,24 +815,27 @@ var defaultGetStatusInfoResultFilter = []SwapStatus{
 }
 
 // GetStatusInfo get status info
-func GetStatusInfo(statuses string) (statusInfo map[string]interface{}, err error) {
+func GetStatusInfo(dbname, statuses string) (statusInfo map[string]interface{}, err error) {
+	fmt.Printf("GetStatusInfo mgo, status: %v\n", statuses)
 	registerStatuses, resultStatuses := getStatusesFromStr(statuses)
+	fmt.Printf("GetStatusInfo mgo, registerStatuses: %v, resultStatuses: %v\n", registerStatuses, resultStatuses)
 	if len(registerStatuses) == 0 && len(resultStatuses) == 0 {
 		registerStatuses = defaultGetStatusInfoRegisterFilter
 		resultStatuses = defaultGetStatusInfoResultFilter
 	}
+	fmt.Printf("GetStatusInfo mgo, registerStatuses: %v, resultStatuses: %v\n", registerStatuses, resultStatuses)
 
 	var registerInfo, resusltInfo []bson.M
 
 	if len(registerStatuses) > 0 {
-		registerInfo, err = getStatusInfo(collRouterSwap, registerStatuses)
+		registerInfo, err = getStatusInfo(dbname, tbRouterSwaps, registerStatuses)
 		if err != nil {
 			return nil, mgoError(err)
 		}
 	}
 
 	if len(resultStatuses) > 0 {
-		resusltInfo, err = getStatusInfo(collRouterSwapResult, resultStatuses)
+		resusltInfo, err = getStatusInfo(dbname, tbRouterSwapResults, resultStatuses)
 		if err != nil {
 			return nil, mgoError(err)
 		}
@@ -830,29 +848,36 @@ func GetStatusInfo(statuses string) (statusInfo map[string]interface{}, err erro
 	for _, m := range resusltInfo {
 		statusInfo[fmt.Sprint(m["_id"])] = m["count"]
 	}
+	fmt.Printf("GetStatusInfo mgo, status: %v, statusInfo: %v\n", statuses, statusInfo)
 	return statusInfo, nil
 }
 
-func getStatusInfo(coll *mongo.Collection, filterStatuses []SwapStatus) (result []bson.M, err error) {
+func getStatusInfo(dbname, tablename string, filterStatuses []SwapStatus) (result []bson.M, err error) {
+	fmt.Printf("getStatusInfo mgo, dbname: %v, tablename: %v, filterStatuses: %v\n", dbname, tablename, filterStatuses)
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
 	pipeOption := []bson.M{
 		{"$match": bson.M{"status": bson.M{"$in": filterStatuses}}},
 		{"$group": bson.M{"_id": "$status", "count": bson.M{"$sum": 1}}},
 	}
 
-	ctx, cancel := context.WithDeadline(clientCtx, time.Now().Add(3*time.Second))
+	ctx, cancel := context.WithDeadline(clientCtx, time.Now().Add(20*time.Second))
 	defer cancel()
 
-	cur, err := coll.Aggregate(ctx, pipeOption)
+	cur, err := c.Aggregate(ctx, pipeOption)
 	if err != nil {
+		fmt.Printf("getStatusInfo mgo aggregate, dbname: %v, tablename: %v, err: %v\n", dbname, tablename, err)
 		return nil, err
 	}
 
 	result = make([]bson.M, 0, 5)
 	err = cur.All(ctx, &result)
 	if err != nil {
+		fmt.Printf("getStatusInfo mgo all, dbname: %v, tablename: %v, err: %v\n", dbname, tablename, err)
 		return nil, err
 	}
 
+	fmt.Printf("getStatusInfo mgo aggregate, dbname: %v, tablename: %v, result: %v\n", dbname, tablename, result)
 	return result, nil
 }
 

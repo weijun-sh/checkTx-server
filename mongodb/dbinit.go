@@ -4,14 +4,18 @@ package mongodb
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/weijun-sh/rsyslog/cmd/utils"
 	"github.com/weijun-sh/rsyslog/log"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 var (
@@ -84,3 +88,18 @@ func connect(opts *options.ClientOptions) (err error) {
 	initCollections()
 	return nil
 }
+
+func GetTxhash4Mgodb(dbname, tablename, txhash string) interface{} {
+	fmt.Printf("TestSwitchDB, txhash: %v\n", txhash)
+	database := client.Database(dbname)
+	collRouterSwapinResult := database.Collection(tablename)
+	swap := &MgoSwap{}
+	errt := collRouterSwapinResult.FindOne(clientCtx, bson.M{"txid": txhash}).Decode(swap)
+        if errt == nil {
+		spew.Printf("%v\n", swap)
+		return swap
+	}
+	fmt.Printf("err: %v\n", errt)
+	return nil
+}
+

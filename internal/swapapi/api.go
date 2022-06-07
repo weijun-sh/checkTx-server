@@ -3,6 +3,7 @@ package swapapi
 import (
 	"strings"
 	"sync"
+	"fmt"
 	"time"
 
 	"github.com/weijun-sh/rsyslog/common"
@@ -63,8 +64,9 @@ func GetOracleInfo() map[string]*OracleInfo {
 }
 
 // GetStatusInfo api
-func GetStatusInfo(status string) (map[string]interface{}, error) {
-	return mongodb.GetStatusInfo(status)
+func GetStatusInfo(dbname, status string) (map[string]interface{}, error) {
+	fmt.Printf("GetStatusInfo, status: %v\n", status)
+	return mongodb.GetStatusInfo(dbname, status)
 }
 
 // ReportOracleInfo report oracle info
@@ -219,16 +221,16 @@ func getLogIndex(logindexStr string) (int, error) {
 }
 
 // GetRouterSwap impl
-func GetRouterSwap(fromChainID, txid, logindexStr string) (*SwapInfo, error) {
+func GetRouterSwap(dbname, fromChainID, txid, logindexStr string) (*SwapInfo, error) {
 	logindex, err := getLogIndex(logindexStr)
 	if err != nil {
 		return nil, err
 	}
-	result, err := mongodb.FindRouterSwapResultAuto(fromChainID, txid, logindex)
+	result, err := mongodb.FindRouterSwapResultAuto(dbname, fromChainID, txid, logindex)
 	if err == nil {
 		return ConvertMgoSwapResultToSwapInfo(result), nil
 	}
-	register, err := mongodb.FindRouterSwapAuto(fromChainID, txid, logindex)
+	register, err := mongodb.FindRouterSwapAuto(dbname, fromChainID, txid, logindex)
 	if err == nil {
 		return ConvertMgoSwapToSwapInfo(register), nil
 	}
@@ -236,7 +238,7 @@ func GetRouterSwap(fromChainID, txid, logindexStr string) (*SwapInfo, error) {
 }
 
 // GetRouterSwapHistory impl
-func GetRouterSwapHistory(fromChainID, address string, offset, limit int, status string) ([]*SwapInfo, error) {
+func GetRouterSwapHistory(dbname, fromChainID, address string, offset, limit int, status string) ([]*SwapInfo, error) {
 	switch {
 	case limit == 0:
 		limit = 20 // default
@@ -245,7 +247,7 @@ func GetRouterSwapHistory(fromChainID, address string, offset, limit int, status
 	case limit < -100:
 		limit = -100
 	}
-	result, err := mongodb.FindRouterSwapResults(fromChainID, address, offset, limit, status)
+	result, err := mongodb.FindRouterSwapResults(dbname, fromChainID, address, offset, limit, status)
 	if err != nil {
 		return nil, err
 	}

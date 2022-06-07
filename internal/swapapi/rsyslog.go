@@ -10,8 +10,47 @@ import (
 	"os"
 
 	"github.com/weijun-sh/rsyslog/common"
+	"github.com/weijun-sh/rsyslog/mongodb"
 )
 
+var (
+	mongdbArray = []string{"ETH2BSC"}
+	tableArray = []string{"SwapinResults", "Swapins", "SwapoutResults", "Swapouts"}
+			//"Blacklist", "LatestScanInfo", "LatestSwapNonces"
+)
+
+// GetTxhash get bridge/router txhash
+func GetTxhash(chainid, txhash string) *ResultBridge {
+	fmt.Printf("GetTxhash, chainid: %v, txhash: %v\n", chainid, txhash)
+	if len(chainid) == 0 || !common.IsHexHash(txhash) {
+		return &ResultBridge{
+			Code: 2,
+			Msg: "chainid or txhash format error",
+		}
+	}
+	return getTxhash(chainid, txhash)
+}
+
+func getTxhash(chainid, txhash string) *ResultBridge {
+	msg := ""
+	ret := mongodb.GetTxhash4Mgodb("ETH2BSC", "SwapinResults", txhash)
+	if ret == nil {
+		msg = "get nothing"
+	}
+	return &ResultBridge{
+		Code: 2,
+		Msg: msg,
+		Data: ret,
+	}
+}
+
+type ResultBridge struct {
+	Code uint64 `json:"code"`
+	Msg string `json:"msg"`
+	Data interface{} `json:"data"`
+}
+
+// ===== get from log
 // CheckBridgeTxhash check bridge/router txhash
 func CheckBridgeTxhash(bridge, txhash string) *ResultCheckBridge {
 	fmt.Printf("CheckBridgeTxhash, bridge: %v, txhash: %v\n", bridge, txhash)

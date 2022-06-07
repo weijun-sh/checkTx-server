@@ -91,3 +91,4 @@ func rsyslog(ctx *cli.Context) error {
 	utils.TopWaitGroup.Wait()
 	return nil
 }
+

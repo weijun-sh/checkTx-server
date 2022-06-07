@@ -49,17 +49,6 @@ func (s *RouterSwapAPI) GetOracleInfo(r *http.Request, args *RPCNullArgs, result
 	return nil
 }
 
-type getStatusInfoResult map[string]interface{}
-
-// GetStatusInfo api
-func (s *RouterSwapAPI) GetStatusInfo(r *http.Request, statuses *string, result *getStatusInfoResult) error {
-	res, err := swapapi.GetStatusInfo(*statuses)
-	if err == nil && res != nil {
-		*result = res
-	}
-	return err
-}
-
 // OracleInfoArgs args
 type OracleInfoArgs struct {
 	Enode     string `json:"enode"`
@@ -85,7 +74,7 @@ func (s *RouterSwapAPI) ReportOracleInfo(r *http.Request, args *OracleInfoArgs, 
 
 // GetRouterSwap api
 func (s *RouterSwapAPI) GetRouterSwap(r *http.Request, args *RouterSwapKeyArgs, result *swapapi.SwapInfo) error {
-	res, err := swapapi.GetRouterSwap(args.ChainID, args.TxID, args.LogIndex)
+	res, err := swapapi.GetRouterSwap("", args.ChainID, args.TxID, args.LogIndex)
 	if err == nil && res != nil {
 		*result = *res
 	}
@@ -103,7 +92,7 @@ type RouterGetSwapHistoryArgs struct {
 
 // GetRouterSwapHistory api
 func (s *RouterSwapAPI) GetRouterSwapHistory(r *http.Request, args *RouterGetSwapHistoryArgs, result *[]*swapapi.SwapInfo) error {
-	res, err := swapapi.GetRouterSwapHistory(args.ChainID, args.Address, args.Offset, args.Limit, args.Status)
+	res, err := swapapi.GetRouterSwapHistory("", args.ChainID, args.Address, args.Offset, args.Limit, args.Status)
 	if err == nil && res != nil {
 		*result = res
 	}
