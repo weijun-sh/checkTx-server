@@ -46,33 +46,52 @@ type ResultBridge struct {
 
 type statusConfig = map[string][]*swapapi.SwapInfo
 
-func (s *RouterSwapAPI) GetSwapNotStable(r *http.Request, args *RPCNullArgs, result *ResultBridge) error {
-	var status string = "0,8,9,12,14,17"
-	return s.GetSwapHistory(r, &status, result)
+// GetSwapHistory args
+type GetSwapHistoryArgs struct {
+	Bridge string `json:"bridge"`
+	Status string `json:"status"`
 }
 
-func (s *RouterSwapAPI) GetSwapHistory(r *http.Request, statuses *string, result *ResultBridge) error {
+func (s *RouterSwapAPI) GetSwapNotStable(r *http.Request, args *RPCNullArgs, result *ResultBridge) error {
+	var argsH GetSwapHistoryArgs
+	argsH.Bridge = "all"
+	argsH.Status = "0,8,9,12,14,17" // default
+	return s.GetSwapHistory(r, &argsH, result)
+}
+
+func (s *RouterSwapAPI) GetSwapHistory(r *http.Request, args *GetSwapHistoryArgs, result *ResultBridge) error {
 	result.Code = 0
 	result.Msg = ""
 	result.Data = make(map[string][]*statusConfig, 0)
-	for _, dbname := range routerArray_1 {
-		fmt.Printf("\nfind dbname: %v\n", dbname)
-		parts := strings.Split(*statuses, ",")
-		for _, status := range parts {
-			si, errs := swapapi.GetRouterSwapHistory(dbname, "", "", 0, 20, status)
-			if errs == nil && len(si) != 0 {
-				var s statusConfig
-				s = make(statusConfig, 0)
-				for _, st := range si {
-					s[status] = append(s[status], st)
-					spew.Printf("%v\n", st)
-				}
-				result.Data[dbname] = append(result.Data[dbname], &s)
-				//return nil
-			}
+	dbname := args.Bridge
+	status := args.Status
+	fmt.Printf("dbname: %v, status: %v\n", dbname, status)
+	if dbname == "all" {
+		for _, dbname := range routerArray_1 {
+			getSwapHistory(dbname, status, result)
 		}
+	} else {
+		getSwapHistory(dbname, status, result)
 	}
 	return nil
+}
+
+func getSwapHistory(dbname, statuses string, result *ResultBridge) {
+	fmt.Printf("\nfind dbname: %v\n", dbname)
+	parts := strings.Split(statuses, ",")
+	for _, status := range parts {
+		si, errs := swapapi.GetRouterSwapHistory(dbname, "", "", 0, 20, status)
+		if errs == nil && len(si) != 0 {
+			var s statusConfig
+			s = make(statusConfig, 0)
+			for _, st := range si {
+				s[status] = append(s[status], st)
+				spew.Printf("%v\n", st)
+			}
+			result.Data[dbname] = append(result.Data[dbname], &s)
+			//return nil
+		}
+	}
 }
 
 type ResultSwap struct {
