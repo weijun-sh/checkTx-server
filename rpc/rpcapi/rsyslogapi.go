@@ -36,7 +36,7 @@ func (s *RouterSwapAPI) GetStatusInfo(r *http.Request, args *GetSwapHistoryArgs,
 	dbname := args.Bridge
 	status := args.Status
 	if status == "" {
-		status = "0,8,9,12,14,17" // default
+		status = "0,8,9,10,12,14,17" // default
 	}
 	fmt.Printf("GetStatusInfo, status: %v\n", status)
 	if dbname == "all" {
@@ -104,6 +104,9 @@ func getSwapHistory(dbname, statuses string, result *ResultHistory) {
 	fmt.Printf("\nfind dbname: %v\n", dbname)
 	parts := strings.Split(statuses, ",")
 	for _, status := range parts {
+		if status == "10" {
+			continue
+		}
 		si, errs := swapapi.GetRouterSwapHistory(dbname, "", "", 0, 20, status)
 		if errs == nil && len(si) != 0 {
 			var s statusConfig
