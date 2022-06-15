@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/weijun-sh/rsyslog/internal/swapapi"
+	"github.com/weijun-sh/checkTx-server/internal/swapapi"
 
 	"github.com/davecgh/go-spew/spew"
 )
@@ -17,7 +17,7 @@ var (
 	// tables: RouterSwapResults, RouterSwaps
 	routerArray_1 = []string{"Router", "Router-Nevm"} //co-Router
 	// tables: Blacklist, LatestScanInfo, LatestSwapNonces, P2shAddresses, RegisteredAddress, SwapHistory, SwapStatistics, SwapinResults, Swapins, SwapoutResults, Swapouts
-	bridgeArray_1 = []string{"BTC2BSC", "ETH2BSC", "FSN2BSC", "ETH2FSN", "ETH2Fantom", "FSN2Fantom", "FSN2ETH", "BTC2ETH", "LTC2FSN", "LTC2ETH", "LTC2BSC", "LTC2Fantom", "BLOCK2ETH", "ETH2HT", "FSN2HT", "BTC2HT", "BNB2HT", "Fantom2ETH", "FORETH2Fantom", "HT2BSC", "FORETH2BSC", "FSN2MATIC", "FSN2XDAI", "ETH2XDAI", "ETH2MATIC", "ETH2AVAX", "FSN2AVAX", "BLOCK2AVAX", "BSC2AVAX", "BSC2MATIC", "BSC2ETH", "BSC2Fantom", "Harmony2MATIC", "BTC2Harmony", "COLX2BSC", "Fantom2BSC", "ETH2KCS", "COLX2ETH", "HT2MATIC", "MATIC2BSC", "MATIC2AVAX", "BSC2KCS", "BSC2Harmony", "BSC2OKT", "MATIC2OKT", "BLOCK2MATIC", "BLOCK2BSC", "BSC2MOON", "ETH2MOON", "MATIC2Fantom", "ETH2ARB", "ARB2ETH", "BSC2ARB", "MATIC2MOON", "BSC2IOTEX", "BSC2SHI", "ETH2SHI", "MOON2ETH", "BSC2CELO", "AVAX2Fantom", "ETH2HARM", "HT2Fantom", "ARB2MOON", "AVAX2BSC", "MOON2BSC", "ARB2MATIC", "ETH2TLOS", "CELO2BSC", "TERRA2Fantom", "MOON2SHI", "MATIC2HT", "ETH2IOTEX", "Harmony2BSC", "ETH2MOONBEAM", "BSC2MOONBEAM", "ETH2BOBA", "SHI2BSC", "ETH2astar", "ETH2OKT", "MATIC2ETH", "MATIC2Harmony", "MATIC2MOONBEAM", "AVAX2MOONBEAM", "BSC2astar", "BSC2ROSE", "ETH2ROSE", "ETH2VELAS", "MATIC2XDAI", "IOTEX2BSC", "XRP2AVAX", "ETH2CLV", "ETH2MIKO", "XRP2AVAX", "ETH2MIKO", "ETH2CONFLUX", "KCC2CONFLUX", "ETH2OPTIMISM", "ETH2RSK", "BSC2RSK", "JEWEL2Harmony", "TERRA2ETH", "ETH2EVMOS", "ETH2DOGE", "ETH2ETC", "ETH2CMP"}
+	bridgeArray_1 = []string{"BTC2BSC", "ETH2BSC", "FSN2BSC", "ETH2FSN", "ETH2Fantom", "FSN2Fantom", "FSN2ETH", "BTC2ETH", "LTC2FSN", "LTC2ETH", "LTC2BSC", "LTC2Fantom", "BLOCK2ETH", "ETH2HT", "FSN2HT", "BTC2HT", "BNB2HT", "Fantom2ETH", "FORETH2Fantom", "HT2BSC", "FORETH2BSC", "FSN2MATIC", "FSN2XDAI", "ETH2XDAI", "ETH2MATIC", "ETH2AVAX", "FSN2AVAX", "BLOCK2AVAX", "BSC2AVAX", "BSC2MATIC", "BSC2ETH", "BSC2Fantom", "Harmony2MATIC", "BTC2Harmony", "COLX2BSC", "Fantom2BSC", "ETH2KCS", "COLX2ETH", "HT2MATIC", "MATIC2BSC", "MATIC2AVAX", "BSC2KCS", "BSC2Harmony", "BSC2OKT", "MATIC2OKT", "BLOCK2MATIC", "BLOCK2BSC", "BSC2MOON", "ETH2MOON", "MATIC2Fantom", "ETH2ARB", "ARB2ETH", "BSC2ARB", "MATIC2MOON", "BSC2IOTEX", "BSC2SHI", "ETH2SHI", "MOON2ETH", "BSC2CELO", "AVAX2Fantom", "ETH2HARM", "HT2Fantom", "ARB2MOON", "AVAX2BSC", "MOON2BSC", "ARB2MATIC", "ETH2TLOS", "CELO2BSC", "TERRA2Fantom", "MOON2SHI", "MATIC2HT", "ETH2IOTEX", "Harmony2BSC", "ETH2MOONBEAM", "BSC2MOONBEAM", "ETH2BOBA", "SHI2BSC", "ETH2astar", "ETH2OKT", "MATIC2ETH", "MATIC2Harmony", "MATIC2MOONBEAM", "AVAX2MOONBEAM", "BSC2astar", "BSC2ROSE", "ETH2ROSE", "ETH2VELAS", "MATIC2XDAI", "IOTEX2BSC", "XRP2AVAX", "ETH2CLV", "ETH2MIKO", "XRP2AVAX", "ETH2MIKO", "ETH2CONFLUX", "KCC2CONFLUX", "ETH2OPTIMISM", "ETH2RSK", "BSC2RSK", "JEWEL2Harmony", "TERRA2ETH", "ETH2EVMOS", "ETH2DOGE", "ETH2ETC", "ETH2CMP", "USDT2Fantom"}
 )
 
 type ResultStatus struct {
@@ -41,6 +41,9 @@ func (s *RouterSwapAPI) GetStatusInfo(r *http.Request, args *GetSwapHistoryArgs,
 	fmt.Printf("GetStatusInfo, status: %v\n", status)
 	if dbname == "all" {
 		for _, dbname := range routerArray_1 {
+			getStatusInfo(dbname, status, result)
+		}
+		for _, dbname := range bridgeArray_1 {
 			getStatusInfo(dbname, status, result)
 		}
 	} else {
@@ -124,29 +127,35 @@ func getSwapHistory(dbname, statuses string, result *ResultHistory) {
 type ResultSwap struct {
 	Code uint64 `json:"code"`
 	Msg string `json:"msg"`
-	Data *swapapi.SwapInfo `json:"data"`
+	Data map[string]interface{} `json:"data"`
 }
 
 // GetSwapTxUn get swap tx unconfirmed
 func (s *RouterSwapAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) error {
-       fmt.Printf("GetStatusInfo\n")
+	fmt.Printf("GetSwap, args: %v\n", args)
+	chainid := args.ChainID
+	txid := args.TxID
+	if chainid == "" || txid == "" {
+		return errors.New("args err")
+	}
 	result.Code = 0
 	result.Msg = ""
+	result.Data = make(map[string]interface{}, 0)
 	for _, dbname := range routerArray_1 {
 		fmt.Printf("find dbname: %v\n", dbname)
 		res, err := swapapi.GetRouterSwap(dbname, args.ChainID, args.TxID, args.LogIndex)
 		if err == nil && res != nil {
-			result.Data = res
+			result.Data[dbname] = res
 			return nil
 		}
 	}
 	for _, dbname := range bridgeArray_1 {
 		fmt.Printf("find dbname: %v\n", dbname)
-		//res, err := swapapi.GetBridgeSwap(dbname, args.ChainID, args.TxID)
-		//if err == nil && res != nil {
-		//	*result = *res
-		//	return nil
-		//}
+		res, err := swapapi.GetBridgeSwap(dbname, args.ChainID, args.TxID)
+		if err == nil && res != nil {
+			result.Data[dbname] = res
+			return nil
+		}
 	}
 	return errors.New("not found")
 }

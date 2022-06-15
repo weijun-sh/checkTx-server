@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/weijun-sh/rsyslog/common/hexutil"
+	"github.com/weijun-sh/checkTx-server/common/hexutil"
 	"golang.org/x/crypto/sha3"
 )
 

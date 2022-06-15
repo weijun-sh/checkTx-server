@@ -3,7 +3,7 @@ package worker
 import (
 	"time"
 
-	"github.com/weijun-sh/rsyslog/router/bridge"
+	"github.com/weijun-sh/checkTx-server/router/bridge"
 )
 
 const interval = 10 * time.Millisecond

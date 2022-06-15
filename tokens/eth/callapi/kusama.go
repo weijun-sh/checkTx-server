@@ -1,10 +1,10 @@
 package callapi
 
 import (
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/common/hexutil"
-	"github.com/weijun-sh/rsyslog/rpc/client"
-	"github.com/weijun-sh/rsyslog/tokens"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/common/hexutil"
+	"github.com/weijun-sh/checkTx-server/rpc/client"
+	"github.com/weijun-sh/checkTx-server/tokens"
 )
 
 var (

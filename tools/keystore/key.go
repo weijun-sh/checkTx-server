@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/tools/crypto"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/tools/crypto"
 	"github.com/pborman/uuid"
 )
 

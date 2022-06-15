@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/weijun-sh/rsyslog/cmd/utils"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/router"
-	"github.com/weijun-sh/rsyslog/tokens"
-	"github.com/weijun-sh/rsyslog/tools"
+	"github.com/weijun-sh/checkTx-server/cmd/utils"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/router"
+	"github.com/weijun-sh/checkTx-server/tokens"
+	"github.com/weijun-sh/checkTx-server/tools"
 )
 
 var (

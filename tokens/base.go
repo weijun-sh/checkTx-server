@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	cmath "github.com/weijun-sh/rsyslog/common/math"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/params"
+	cmath "github.com/weijun-sh/checkTx-server/common/math"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/params"
 )
 
 var (

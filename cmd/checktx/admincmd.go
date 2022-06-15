@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/weijun-sh/rsyslog/admin"
-	"github.com/weijun-sh/rsyslog/cmd/utils"
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/log"
+	"github.com/weijun-sh/checkTx-server/admin"
+	"github.com/weijun-sh/checkTx-server/cmd/utils"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/log"
 	"github.com/urfave/cli/v2"
 )
 

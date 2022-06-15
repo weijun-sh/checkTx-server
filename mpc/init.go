@@ -8,12 +8,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/params"
-	"github.com/weijun-sh/rsyslog/tools"
-	"github.com/weijun-sh/rsyslog/tools/keystore"
-	"github.com/weijun-sh/rsyslog/types"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/tools"
+	"github.com/weijun-sh/checkTx-server/tools/keystore"
+	"github.com/weijun-sh/checkTx-server/types"
 )
 
 const (

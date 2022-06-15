@@ -3,7 +3,7 @@ package mpc
 import (
 	"encoding/json"
 
-	"github.com/weijun-sh/rsyslog/common"
+	"github.com/weijun-sh/checkTx-server/common"
 )
 
 // DoAcceptSign accept sign

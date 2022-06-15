@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/weijun-sh/rsyslog/cmd/utils"
-	"github.com/weijun-sh/rsyslog/common"
+	"github.com/weijun-sh/checkTx-server/cmd/utils"
+	"github.com/weijun-sh/checkTx-server/common"
 	"github.com/mr-tron/base58"
 	"github.com/urfave/cli/v2"
 )

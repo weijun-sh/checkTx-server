@@ -3,9 +3,9 @@ package eth
 import (
 	"errors"
 
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/params"
-	"github.com/weijun-sh/rsyslog/types"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/types"
 )
 
 // SendTransaction send signed tx

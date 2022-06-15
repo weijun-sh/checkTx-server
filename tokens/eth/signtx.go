@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/mpc"
-	"github.com/weijun-sh/rsyslog/params"
-	"github.com/weijun-sh/rsyslog/router"
-	"github.com/weijun-sh/rsyslog/tokens"
-	"github.com/weijun-sh/rsyslog/tools/crypto"
-	"github.com/weijun-sh/rsyslog/types"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/mpc"
+	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/router"
+	"github.com/weijun-sh/checkTx-server/tokens"
+	"github.com/weijun-sh/checkTx-server/tools/crypto"
+	"github.com/weijun-sh/checkTx-server/types"
 )
 
 func (b *Bridge) verifyTransactionReceiver(rawTx interface{}, tokenID string) (*types.Transaction, error) {

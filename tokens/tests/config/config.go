@@ -5,9 +5,9 @@ import (
 	"math/big"
 
 	"github.com/BurntSushi/toml"
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/tokens"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/tokens"
 )
 
 var (

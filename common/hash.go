@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"reflect"
 
-	"github.com/weijun-sh/rsyslog/common/hexutil"
+	"github.com/weijun-sh/checkTx-server/common/hexutil"
 )
 
 // Lengths of hashes in bytes.

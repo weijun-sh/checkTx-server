@@ -12,7 +12,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/weijun-sh/rsyslog/internal/build"
+	"github.com/weijun-sh/checkTx-server/internal/build"
 )
 
 var gobin, _ = filepath.Abs(filepath.Join("build", "bin"))

@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/internal/swapapi"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/params"
-	"github.com/weijun-sh/rsyslog/router"
-	"github.com/weijun-sh/rsyslog/tokens"
-	"github.com/weijun-sh/rsyslog/tokens/tests/config"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/internal/swapapi"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/router"
+	"github.com/weijun-sh/checkTx-server/tokens"
+	"github.com/weijun-sh/checkTx-server/tokens/tests/config"
 	"github.com/gorilla/mux"
 )
 

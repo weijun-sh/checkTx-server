@@ -5,9 +5,9 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/common/hexutil"
-	"github.com/weijun-sh/rsyslog/params"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/common/hexutil"
+	"github.com/weijun-sh/checkTx-server/params"
 )
 
 // token types (should be all upper case)

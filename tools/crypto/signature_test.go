@@ -22,9 +22,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/common/hexutil"
-	"github.com/weijun-sh/rsyslog/common/math"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/common/hexutil"
+	"github.com/weijun-sh/checkTx-server/common/math"
 )
 
 var (

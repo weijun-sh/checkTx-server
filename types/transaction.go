@@ -5,9 +5,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/tools/crypto"
-	"github.com/weijun-sh/rsyslog/tools/rlp"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/tools/crypto"
+	"github.com/weijun-sh/checkTx-server/tools/rlp"
 	"golang.org/x/crypto/sha3"
 )
 

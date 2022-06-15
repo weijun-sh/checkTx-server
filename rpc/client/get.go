@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/weijun-sh/rsyslog/log"
+	"github.com/weijun-sh/checkTx-server/log"
 )
 
 // RPCGet rpc get

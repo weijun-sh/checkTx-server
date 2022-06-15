@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/weijun-sh/rsyslog/common"
+	"github.com/weijun-sh/checkTx-server/common"
 )
 
 // ChainConfig struct

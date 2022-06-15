@@ -3,9 +3,9 @@ package eth
 import (
 	"time"
 
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/tokens"
-	"github.com/weijun-sh/rsyslog/types"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/tokens"
+	"github.com/weijun-sh/checkTx-server/types"
 )
 
 // GetTransactionStatus impl

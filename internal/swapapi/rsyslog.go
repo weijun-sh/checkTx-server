@@ -9,8 +9,8 @@ import (
 	"strings"
 	"os"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/mongodb"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/mongodb"
 )
 
 var (

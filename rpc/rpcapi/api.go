@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/weijun-sh/rsyslog/internal/swapapi"
-	"github.com/weijun-sh/rsyslog/params"
-	"github.com/weijun-sh/rsyslog/router"
-	"github.com/weijun-sh/rsyslog/tokens"
+	"github.com/weijun-sh/checkTx-server/internal/swapapi"
+	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/router"
+	"github.com/weijun-sh/checkTx-server/tokens"
 )
 
 // RouterSwapAPI rpc api handler

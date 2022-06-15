@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/weijun-sh/rsyslog/common/hexutil"
+	"github.com/weijun-sh/checkTx-server/common/hexutil"
 )
 
 type MyType [5]byte

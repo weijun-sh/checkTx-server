@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/weijun-sh/rsyslog/mpc"
-	"github.com/weijun-sh/rsyslog/params"
-	"github.com/weijun-sh/rsyslog/rpc/client"
+	"github.com/weijun-sh/checkTx-server/mpc"
+	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/rpc/client"
 )
 
 var (

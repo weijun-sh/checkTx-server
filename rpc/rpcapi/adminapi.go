@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/weijun-sh/rsyslog/admin"
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/mongodb"
-	"github.com/weijun-sh/rsyslog/params"
-	"github.com/weijun-sh/rsyslog/router"
-	"github.com/weijun-sh/rsyslog/tokens"
-	"github.com/weijun-sh/rsyslog/worker"
+	"github.com/weijun-sh/checkTx-server/admin"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/mongodb"
+	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/router"
+	"github.com/weijun-sh/checkTx-server/tokens"
+	"github.com/weijun-sh/checkTx-server/worker"
 )
 
 const (

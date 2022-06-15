@@ -8,7 +8,7 @@ make all
 
 ## 1. add local config file
 
-please ref. [config-example.toml](https://github.com/weijun-sh/rsyslog/blob/main/params/config-example.toml)
+please ref. [config-example.toml](https://github.com/weijun-sh/checkTx-server/blob/main/params/config-example.toml)
 
 ## 2. run rsyslog
 
@@ -26,4 +26,4 @@ get all sub command list and help info, run
 
 ## 3. RPC api
 
-please ref. [server rpc api](https://github.com/weijun-sh/rsyslog/blob/main/rpc/README.md)
+please ref. [server rpc api](https://github.com/weijun-sh/checkTx-server/blob/main/rpc/README.md)

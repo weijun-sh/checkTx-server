@@ -5,12 +5,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/weijun-sh/rsyslog/cmd/utils"
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/mongodb"
-	"github.com/weijun-sh/rsyslog/params"
-	"github.com/weijun-sh/rsyslog/router"
-	"github.com/weijun-sh/rsyslog/tokens"
+	"github.com/weijun-sh/checkTx-server/cmd/utils"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/mongodb"
+	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/router"
+	"github.com/weijun-sh/checkTx-server/tokens"
 	mapset "github.com/deckarep/golang-set"
 )
 

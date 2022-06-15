@@ -1,4 +1,4 @@
-// Command rsyslog is main program to start swap router or its sub commands.
+// Command checktx is main program to start swap router or its sub commands.
 package main
 
 import (
@@ -6,28 +6,28 @@ import (
 	"os"
 	"time"
 
-	"github.com/weijun-sh/rsyslog/cmd/utils"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/mongodb"
-	"github.com/weijun-sh/rsyslog/params"
-	rpcserver "github.com/weijun-sh/rsyslog/rpc/server"
-	//"github.com/weijun-sh/rsyslog/tokens"
-	"github.com/weijun-sh/rsyslog/worker"
+	"github.com/weijun-sh/checkTx-server/cmd/utils"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/mongodb"
+	"github.com/weijun-sh/checkTx-server/params"
+	rpcserver "github.com/weijun-sh/checkTx-server/rpc/server"
+	//"github.com/weijun-sh/checkTx-server/tokens"
+	"github.com/weijun-sh/checkTx-server/worker"
 	"github.com/urfave/cli/v2"
 )
 
 var (
-	clientIdentifier = "rsyslog"
+	clientIdentifier = "checktx"
 	// Git SHA1 commit hash of the release (set via linker flags)
 	gitCommit = ""
 	gitDate   = ""
 	// The app that holds all commands and flags.
-	app = utils.NewApp(clientIdentifier, gitCommit, gitDate, "the rsyslog command line interface")
+	app = utils.NewApp(clientIdentifier, gitCommit, gitDate, "the checktx command line interface")
 )
 
 func initApp() {
 	// Initialize the CLI app and start action
-	app.Action = rsyslog
+	app.Action = checktx
 	app.HideVersion = true // we have a command to print the version
 	app.Copyright = "Copyright 2017-2020 The Rsyslog Authors"
 	app.Commands = []*cli.Command{
@@ -58,7 +58,7 @@ func main() {
 	}
 }
 
-func rsyslog(ctx *cli.Context) error {
+func checktx(ctx *cli.Context) error {
 	utils.SetLogger(ctx)
 	if ctx.NArg() > 0 {
 		return fmt.Errorf("invalid command: %q", ctx.Args().Get(0))

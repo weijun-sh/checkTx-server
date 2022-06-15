@@ -1,9 +1,9 @@
 package swapapi
 
 import (
-	"github.com/weijun-sh/rsyslog/mongodb"
-	"github.com/weijun-sh/rsyslog/router"
-	"github.com/weijun-sh/rsyslog/tokens"
+	"github.com/weijun-sh/checkTx-server/mongodb"
+	"github.com/weijun-sh/checkTx-server/router"
+	"github.com/weijun-sh/checkTx-server/tokens"
 )
 
 // ConvertMgoSwapToSwapInfo convert

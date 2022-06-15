@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/params"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/params"
 	"github.com/urfave/cli/v2"
 )
 

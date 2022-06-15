@@ -3,8 +3,8 @@ package admin
 import (
 	"errors"
 
-	"github.com/weijun-sh/rsyslog/cmd/utils"
-	"github.com/weijun-sh/rsyslog/rpc/client"
+	"github.com/weijun-sh/checkTx-server/cmd/utils"
+	"github.com/weijun-sh/checkTx-server/rpc/client"
 	"github.com/urfave/cli/v2"
 )
 

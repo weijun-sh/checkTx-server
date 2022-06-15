@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/weijun-sh/rsyslog/common"
+	"github.com/weijun-sh/checkTx-server/common"
 )
 
 // Hash returns the transaction hash

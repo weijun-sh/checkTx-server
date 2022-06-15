@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/weijun-sh/rsyslog/log"
+	"github.com/weijun-sh/checkTx-server/log"
 	"github.com/urfave/cli/v2"
 )
 

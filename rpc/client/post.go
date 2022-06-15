@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/weijun-sh/rsyslog/log"
+	"github.com/weijun-sh/checkTx-server/log"
 )
 
 const (

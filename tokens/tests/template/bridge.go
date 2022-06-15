@@ -1,7 +1,7 @@
 package template
 
 import (
-	"github.com/weijun-sh/rsyslog/tokens"
+	"github.com/weijun-sh/checkTx-server/tokens"
 )
 
 var (

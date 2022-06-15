@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/mongodb"
-	"github.com/weijun-sh/rsyslog/mpc"
-	"github.com/weijun-sh/rsyslog/params"
-	"github.com/weijun-sh/rsyslog/router"
-	"github.com/weijun-sh/rsyslog/tokens"
-	"github.com/weijun-sh/rsyslog/worker"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/mongodb"
+	"github.com/weijun-sh/checkTx-server/mpc"
+	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/router"
+	"github.com/weijun-sh/checkTx-server/tokens"
+	"github.com/weijun-sh/checkTx-server/worker"
 	rpcjson "github.com/gorilla/rpc/v2/json2"
 )
 
@@ -218,6 +218,19 @@ func getLogIndex(logindexStr string) (int, error) {
 		return 0, newRPCError(-32099, "negative log index")
 	}
 	return logIndex, nil
+}
+
+func GetBridgeSwap(dbname, fromChainID, txid string) (*BridgeSwapInfo, error) {
+	result, err := mongodb.FindBridgeSwapResultAuto(dbname, txid)
+	//fmt.Printf("mongodb.FindSwapResultAuto, result: %v, err: %v\n", result, err)
+	if err == nil {
+		return ConvertMgoSwapResultToBridgeSwapInfo(result), nil
+	}
+	register, err := mongodb.FindBridgeSwapAuto(dbname, txid)
+	if err == nil {
+		return ConvertMgoSwapToBridgeSwapInfo(register), nil
+	}
+	return nil, mongodb.ErrSwapNotFound
 }
 
 // GetRouterSwap impl

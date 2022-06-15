@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/router"
-	"github.com/weijun-sh/rsyslog/tokens"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/router"
+	"github.com/weijun-sh/checkTx-server/tokens"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -375,6 +375,60 @@ func UpdateRouterOldSwapTxs(fromChainID, txid string, logindex int, swapTx strin
 	return mgoError(err)
 }
 
+// FindBridgeSwapResultAuto find router swap result
+func FindBridgeSwapResultAuto(dbname, txid string) (*MgoBridgeSwapResult, error) {
+	ret, err := FindBridgeSwapResult(dbname, txid)
+	return ret, err
+}
+
+// FindBridgeSwapResult find router swap result
+func FindBridgeSwapResult(dbname, txid string) (*MgoBridgeSwapResult, error) {
+	//fmt.Printf("FindBridgeSwapResult, txhash: %v\n", txid)
+	tablename := tbSwapinResults
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
+
+	result := &MgoBridgeSwapResult{}
+	err := c.FindOne(clientCtx, bson.M{"txid": txid}).Decode(result)
+	if err != nil {
+		tablename := tbSwapoutResults
+		database := client.Database(dbname)
+		c := database.Collection(tablename)
+		err := c.FindOne(clientCtx, bson.M{"txid": txid}).Decode(result)
+		if err != nil {
+			return nil, mgoError(err)
+		}
+	}
+	return result, nil
+}
+
+// FindBridgeSwapResultAuto find bridge swap
+func FindBridgeSwapAuto(dbname, txid string) (*MgoBridgeSwap, error) {
+	ret, err := FindBridgeSwap(dbname, txid)
+	return ret, err
+}
+
+// FindBridgeSwap find router swap
+func FindBridgeSwap(dbname, txid string) (*MgoBridgeSwap, error) {
+	//fmt.Printf("FindBridgeSwap, txhash: %v\n", txid)
+	tablename := tbSwapins
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
+
+	result := &MgoBridgeSwap{}
+	err := c.FindOne(clientCtx, bson.M{"txid": txid}).Decode(result)
+	if err != nil {
+		tablename := tbSwapouts
+		database := client.Database(dbname)
+		c := database.Collection(tablename)
+		err := c.FindOne(clientCtx, bson.M{"txid": txid}).Decode(result)
+		if err != nil {
+			return nil, mgoError(err)
+		}
+	}
+	return result, nil
+}
+
 // FindRouterSwapResult find router swap result
 func FindRouterSwapResult(fromChainID, txid string, logindex int) (*MgoSwapResult, error) {
 	key := GetRouterSwapKey(fromChainID, txid, logindex)
@@ -395,7 +449,7 @@ func FindRouterSwapResultAuto(dbname, fromChainID, txid string, logindex int) (*
 }
 
 func findFirstRouterSwapResult(dbname, fromChainID, txid string) (*MgoSwapResult, error) {
-	fmt.Printf("TestSwitchDB, txhash: %v\n", txid)
+	//fmt.Printf("findFirstRouterSwapResult, txhash: %v\n", txid)
 	tablename := tbRouterSwapResults
 	database := client.Database(dbname)
 	c := database.Collection(tablename)

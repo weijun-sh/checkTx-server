@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	cmath "github.com/weijun-sh/rsyslog/common/math"
+	cmath "github.com/weijun-sh/checkTx-server/common/math"
 	"golang.org/x/crypto/sha3"
 )
 

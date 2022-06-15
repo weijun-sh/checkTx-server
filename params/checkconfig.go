@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/common/hexutil"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/rpc/client"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/common/hexutil"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/rpc/client"
 )
 
 var blankOrCommaSepRegexp = regexp.MustCompile(`[\s,]+`) // blank or comma separated

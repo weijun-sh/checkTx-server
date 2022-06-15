@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/weijun-sh/rsyslog/params"
+	"github.com/weijun-sh/checkTx-server/params"
 	"github.com/urfave/cli/v2"
 )
 

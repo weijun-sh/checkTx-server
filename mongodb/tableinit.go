@@ -1,7 +1,7 @@
 package mongodb
 
 import (
-	"github.com/weijun-sh/rsyslog/log"
+	"github.com/weijun-sh/checkTx-server/log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -11,6 +11,11 @@ const (
 	tbRouterSwaps       string = "RouterSwaps"
 	tbRouterSwapResults string = "RouterSwapResults"
 	tbUsedRValues       string = "UsedRValues"
+
+	tbSwapinResults     string = "SwapinResults"
+	tbSwapins           string = "Swapins"
+	tbSwapoutResults    string = "SwapoutResults"
+	tbSwapouts          string = "Swapouts"
 )
 
 var (

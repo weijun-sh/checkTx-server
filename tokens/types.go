@@ -3,7 +3,7 @@ package tokens
 import (
 	"math/big"
 
-	"github.com/weijun-sh/rsyslog/common/hexutil"
+	"github.com/weijun-sh/checkTx-server/common/hexutil"
 )
 
 // SwapType type

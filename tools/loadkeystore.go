@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/weijun-sh/rsyslog/tools/keystore"
+	"github.com/weijun-sh/checkTx-server/tools/keystore"
 )
 
 var errUnsafeFilePermissions = errors.New("unsafe file permissions, want 0400")

@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/weijun-sh/rsyslog/cmd/utils"
-	"github.com/weijun-sh/rsyslog/log"
+	"github.com/weijun-sh/checkTx-server/cmd/utils"
+	"github.com/weijun-sh/checkTx-server/log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -85,7 +85,7 @@ func connect(opts *options.ClientOptions) (err error) {
 		return err
 	}
 
-	initCollections()
+	//initCollections()
 	return nil
 }
 

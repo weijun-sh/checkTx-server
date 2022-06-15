@@ -6,9 +6,9 @@
 package eth
 
 import (
-	"github.com/weijun-sh/rsyslog/tokens"
-	ethpro "github.com/weijun-sh/rsyslog/tokens/eth"
-	"github.com/weijun-sh/rsyslog/types"
+	"github.com/weijun-sh/checkTx-server/tokens"
+	ethpro "github.com/weijun-sh/checkTx-server/tokens/eth"
+	"github.com/weijun-sh/checkTx-server/types"
 )
 
 var (

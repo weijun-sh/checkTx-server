@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/weijun-sh/rsyslog/common"
-	"github.com/weijun-sh/rsyslog/tools/rlp"
+	"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/tools/rlp"
 )
 
 var (

@@ -1,4 +1,4 @@
-module github.com/weijun-sh/rsyslog
+module github.com/weijun-sh/checkTx-server
 
 go 1.15
 

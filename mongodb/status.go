@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/weijun-sh/rsyslog/tokens"
+	"github.com/weijun-sh/checkTx-server/tokens"
 )
 
 // -----------------------------------------------
@@ -44,6 +44,7 @@ const (
 	MatchTxFailed     SwapStatus = 14
 	SwapInBlacklist   SwapStatus = 15
 	ManualMakeFail    SwapStatus = 16
+	BindAddrIsContract SwapStatus = 17
 	TxWithWrongPath   SwapStatus = 19
 	MissTokenConfig   SwapStatus = 20
 	NoUnderlyingToken SwapStatus = 21

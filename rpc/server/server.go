@@ -15,11 +15,11 @@ import (
 	"github.com/gorilla/rpc/v2"
 	rpcjson "github.com/gorilla/rpc/v2/json2"
 
-	"github.com/weijun-sh/rsyslog/cmd/utils"
-	"github.com/weijun-sh/rsyslog/log"
-	"github.com/weijun-sh/rsyslog/params"
-	"github.com/weijun-sh/rsyslog/rpc/restapi"
-	"github.com/weijun-sh/rsyslog/rpc/rpcapi"
+	"github.com/weijun-sh/checkTx-server/cmd/utils"
+	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/rpc/restapi"
+	"github.com/weijun-sh/checkTx-server/rpc/rpcapi"
 )
 
 // StartAPIServer start api server

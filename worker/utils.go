@@ -3,7 +3,7 @@ package worker
 import (
 	"time"
 
-	"github.com/weijun-sh/rsyslog/log"
+	"github.com/weijun-sh/checkTx-server/log"
 )
 
 var (

@@ -1,13 +1,13 @@
 .PHONY: all test testv clean fmt
-.PHONY: rsyslog
+.PHONY: checktx
 
 GOBIN = ./build/bin
 GOCMD = env GO111MODULE=on GOPROXY=https://goproxy.io,direct go
 
-rsyslog:
-	$(GOCMD) run build/ci.go install ./cmd/rsyslog
+checktx:
+	$(GOCMD) run build/ci.go install ./cmd/checktx
 	@echo "Done building."
-	@echo "Run \"$(GOBIN)/rsyslog\" to launch rsyslog."
+	@echo "Run \"$(GOBIN)/checktx\" to launch checktx."
 
 all:
 	$(GOCMD) build -v ./...

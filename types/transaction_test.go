@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	"github.com/weijun-sh/rsyslog/common"
+	"github.com/weijun-sh/checkTx-server/common"
 )
 
 type txHashTest struct {

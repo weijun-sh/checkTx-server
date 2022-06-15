@@ -3,7 +3,7 @@ package tokens
 import (
 	"fmt"
 
-	"github.com/weijun-sh/rsyslog/rpc/client"
+	"github.com/weijun-sh/checkTx-server/rpc/client"
 )
 
 // WrapRPCQueryError wrap rpc error
