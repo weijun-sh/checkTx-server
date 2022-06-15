@@ -18,5 +18,8 @@ MaxRequestsLimit = 100
 
 # Gateways config. key is chainID
 [Gateways]
-4     = ["http://127.0.0.1:6711", "http://127.0.0.1:6722"]
+1     = ["https://nodes.mewapi.io/rpc/eth", ""]
+
+[Bridges]
+# address = bridge/dbname
 

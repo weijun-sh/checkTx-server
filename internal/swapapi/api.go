@@ -69,6 +69,12 @@ func GetStatusInfo(dbname, status string) (map[string]interface{}, error) {
 	return mongodb.GetStatusInfo(dbname, status)
 }
 
+// GetBridgeStatusInfo api
+func GetBridgeStatusInfo(dbname, status string) (map[string]interface{}, error) {
+	fmt.Printf("GetBridgeStatusInfo, status: %v\n", status)
+	return mongodb.GetBridgeStatusInfo(dbname, status)
+}
+
 // ReportOracleInfo report oracle info
 func ReportOracleInfo(oracle string, info *OracleInfo) error {
 	var exist bool

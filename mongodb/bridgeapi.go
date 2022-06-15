@@ -1,14 +1,14 @@
 package mongodb
 
 import (
-	//"context"
+	"context"
 	//"errors"
 	"fmt"
 	"strings"
 	//"sync"
-	//"time"
+	"time"
 
-	//"github.com/weijun-sh/checkTx-server/common"
+	"github.com/weijun-sh/checkTx-server/common"
 	//"github.com/weijun-sh/checkTx-server/log"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -540,22 +540,22 @@ func findSwapResult(collection *mongo.Collection, txid, pairID, bind string) (*M
 //	err = findSwapsOrSwapResultsWithStatus(&result, collection, status, septime)
 //	return result, err
 //}
-//
-////func getStatusesFromStr(status string) []SwapStatus {
-////	parts := strings.Split(status, ",")
-////	result := make([]SwapStatus, 0, len(parts))
-////	for _, part := range parts {
-////		if part == "" {
-////			continue
-////		}
-////		num, err := common.GetUint64FromStr(part)
-////		if err == nil {
-////			result = append(result, SwapStatus(num))
-////		}
-////	}
-////	return result
-////}
-//
+
+func getBridgeStatusesFromStr(status string) []SwapStatus {
+	parts := strings.Split(status, ",")
+	result := make([]SwapStatus, 0, len(parts))
+	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+		num, err := common.GetUint64FromStr(part)
+		if err == nil {
+			result = append(result, SwapStatus(num))
+		}
+	}
+	return result
+}
+
 //func findSwapResults(collection *mongo.Collection, address, pairID string, offset, limit int, status string) ([]*MgoSwapResult, error) {
 //	var queries []bson.M
 //
@@ -899,48 +899,57 @@ var defaultGetStatusInfoFilter = []SwapStatus{
 	BindAddrIsContract, // 17
 }
 
-//// GetStatusInfo get status info
-//func GetStatusInfo(statuses string) (map[string]map[string]interface{}, error) {
-//	filterStatuses := getStatusesFromStr(statuses)
-//	if len(filterStatuses) == 0 {
-//		filterStatuses = defaultGetStatusInfoFilter
-//	}
-//	pipeOption := []bson.M{
-//		{"$match": bson.M{"status": bson.M{"$in": filterStatuses}}},
-//		{"$group": bson.M{"_id": "$status", "count": bson.M{"$sum": 1}}},
-//	}
-//	swapinStatusInfo, err := getStatusInfo(collSwapinResult, pipeOption)
-//	if err != nil {
-//		return nil, err
-//	}
-//	swapoutStatusInfo, err := getStatusInfo(collSwapoutResult, pipeOption)
-//	if err != nil {
-//		return nil, err
-//	}
-//	result := make(map[string]map[string]interface{}, 2)
-//	result["swapin"] = swapinStatusInfo
-//	result["swapout"] = swapoutStatusInfo
-//	return result, nil
-//}
-//
-//func getStatusInfo(collection *mongo.Collection, pipeOption []bson.M) (map[string]interface{}, error) {
-//	ctx, cancel := context.WithDeadline(clientCtx, time.Now().Add(3*time.Second))
-//	defer cancel()
-//
-//	cur, err := collection.Aggregate(ctx, pipeOption)
-//	if err != nil {
-//		return nil, mgoError(err)
-//	}
-//
-//	result := make([]bson.M, 0, 10)
-//	err = cur.All(ctx, &result)
-//	if err != nil {
-//		return nil, mgoError(err)
-//	}
-//
-//	statusInfo := make(map[string]interface{}, len(result))
-//	for _, m := range result {
-//		statusInfo[fmt.Sprint(m["_id"])] = m["count"]
-//	}
-//	return statusInfo, nil
-//}
+// GetBridgeStatusInfo get status info
+//func GetBridgeStatusInfo(dbname, statuses string) (map[string]map[string]interface{}, error) {
+func GetBridgeStatusInfo(dbname, statuses string) (map[string]interface{}, error) {
+	filterStatuses := getBridgeStatusesFromStr(statuses)
+	if len(filterStatuses) == 0 {
+		filterStatuses = defaultGetStatusInfoFilter
+	}
+	pipeOption := []bson.M{
+		{"$match": bson.M{"status": bson.M{"$in": filterStatuses}}},
+		{"$group": bson.M{"_id": "$status", "count": bson.M{"$sum": 1}}},
+	}
+
+	tablename := tbSwapinResults
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
+	swapinStatusInfo, err := getBridgeStatusInfo(c, pipeOption)
+	if err != nil {
+		return nil, err
+	}
+
+	tablename = tbSwapoutResults
+	database = client.Database(dbname)
+	c = database.Collection(tablename)
+	swapoutStatusInfo, err := getBridgeStatusInfo(c, pipeOption)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[string]interface{}, 2)
+	result["swapin"] = swapinStatusInfo
+	result["swapout"] = swapoutStatusInfo
+	return result, nil
+}
+
+func getBridgeStatusInfo(collection *mongo.Collection, pipeOption []bson.M) (map[string]interface{}, error) {
+	ctx, cancel := context.WithDeadline(clientCtx, time.Now().Add(3*time.Second))
+	defer cancel()
+
+	cur, err := collection.Aggregate(ctx, pipeOption)
+	if err != nil {
+		return nil, mgoError(err)
+	}
+
+	result := make([]bson.M, 0, 10)
+	err = cur.All(ctx, &result)
+	if err != nil {
+		return nil, mgoError(err)
+	}
+
+	statusInfo := make(map[string]interface{}, len(result))
+	for _, m := range result {
+		statusInfo[fmt.Sprint(m["_id"])] = m["count"]
+	}
+	return statusInfo, nil
+}

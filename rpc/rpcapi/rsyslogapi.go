@@ -44,7 +44,7 @@ func (s *RouterSwapAPI) GetStatusInfo(r *http.Request, args *GetSwapHistoryArgs,
 			getStatusInfo(dbname, status, result)
 		}
 		for _, dbname := range bridgeArray_1 {
-			getStatusInfo(dbname, status, result)
+			getBridgeStatusInfo(dbname, status, result)
 		}
 	} else {
 		getStatusInfo(dbname, status, result)
@@ -55,6 +55,16 @@ func (s *RouterSwapAPI) GetStatusInfo(r *http.Request, args *GetSwapHistoryArgs,
 func getStatusInfo(dbname, status string, result *ResultStatus) {
 	fmt.Printf("\nfind dbname: %v\n", dbname)
 	res, err := swapapi.GetStatusInfo(dbname, status)
+	if err == nil && len(res) != 0 {
+		var s GetStatusInfoResult
+		s = res
+		result.Data[dbname] = &s
+	}
+}
+
+func getBridgeStatusInfo(dbname, status string, result *ResultStatus) {
+	fmt.Printf("\nfind dbname: %v\n", dbname)
+	res, err := swapapi.GetBridgeStatusInfo(dbname, status)
 	if err == nil && len(res) != 0 {
 		var s GetStatusInfoResult
 		s = res
