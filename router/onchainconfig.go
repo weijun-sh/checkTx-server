@@ -15,10 +15,10 @@ import (
 	"github.com/weijun-sh/checkTx-server/tokens"
 	"github.com/weijun-sh/checkTx-server/tokens/eth/abicoder"
 
-	ethclient "github.com/jowenshaw/gethclient"
-	ethcommon "github.com/jowenshaw/gethclient/common"
-	ethtypes "github.com/jowenshaw/gethclient/types"
-	"github.com/jowenshaw/gethclient/types/ethereum"
+	"github.com/ethereum/go-ethereum/ethclient"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum"
 )
 
 var (
