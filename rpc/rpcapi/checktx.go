@@ -28,8 +28,17 @@ type ResultStatus struct {
 
 type GetStatusInfoResult map[string]interface{}
 
-// GetStatusInfo api
-func (s *RouterSwapAPI) GetStatusInfo(r *http.Request, args *GetSwapHistoryArgs, result *ResultStatus) error {
+// GetRouterStatusInfo api
+func (s *RouterSwapAPI) GetRouterStatusInfo(r *http.Request, args *GetSwapHistoryArgs, result *ResultStatus) error {
+	return GetStatusInfo(args, result, true)
+}
+
+// GetBridgeStatusInfo api
+func (s *RouterSwapAPI) GetBridgeStatusInfo(r *http.Request, args *GetSwapHistoryArgs, result *ResultStatus) error {
+	return GetStatusInfo(args, result, false)
+}
+
+func GetStatusInfo(args *GetSwapHistoryArgs, result *ResultStatus, isrouter bool) error {
 	result.Code = 0
 	result.Msg = ""
 	result.Data = make(map[string]*GetStatusInfoResult, 0)
@@ -40,11 +49,14 @@ func (s *RouterSwapAPI) GetStatusInfo(r *http.Request, args *GetSwapHistoryArgs,
 	}
 	fmt.Printf("GetStatusInfo, status: %v\n", status)
 	if dbname == "all" {
-		for _, dbname := range routerArray_1 {
-			getStatusInfo(dbname, status, result)
-		}
-		for _, dbname := range bridgeArray_1 {
-			getBridgeStatusInfo(dbname, status, result)
+		if isrouter {
+			for _, dbname := range routerArray_1 {
+				getStatusInfo(dbname, status, result)
+			}
+		} else {
+			for _, dbname := range bridgeArray_1 {
+				getBridgeStatusInfo(dbname, status, result)
+			}
 		}
 	} else {
 		getStatusInfo(dbname, status, result)
