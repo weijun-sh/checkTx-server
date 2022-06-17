@@ -72,10 +72,10 @@ func checktx(ctx *cli.Context) error {
 	//tokens.InitRouterSwapType(config.SwapType)
 
 	if isServer {
-		appName := params.GetIdentifier()
+		//appName := params.GetIdentifier()
 		dbConfig := config.Server.MongoDB
 		mongodb.MongoServerInit(
-			appName,
+			clientIdentifier,
 			dbConfig.DBURLs,
 			dbConfig.DBName,
 			dbConfig.UserName,

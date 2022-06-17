@@ -243,7 +243,7 @@ func GetCheckBridgeTxhashHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	bridge := vars["bridge"]
 	txid := vars["txid"]
-	ret := swapapi.CheckBridgeTxhash(bridge, txid)
+	ret := swapapi.GetLogs(bridge, txid)
 	if ret == nil {
 		writeResponse(w, nil, fmt.Errorf("%v '%v' not found", bridge, txid))
 	} else {

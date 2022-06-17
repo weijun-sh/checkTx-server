@@ -8,6 +8,9 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/weijun-sh/checkTx-server/common"
 	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/rpc/client"
+
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 // router swap constants
@@ -15,11 +18,16 @@ const (
 	RouterSwapPrefixID = "routerswap"
 )
 
+
 // IsTestMode used for testing
 var IsTestMode bool
 
 var (
 	routerConfig = &RouterConfig{Extra: &ExtraConfig{}}
+
+	EthClient map[string]*ethclient.Client = make(map[string]*ethclient.Client, 0)
+	EthRpc map[string]*[]string = make(map[string]*[]string, 0)
+	Bridge map[string]*string               = make(map[string]*string, 0)
 
 	routerConfigFile string
 	locDataDir       string
@@ -108,6 +116,7 @@ type RouterConfig struct {
 	Onchain     *OnchainConfig
 	Gateways    map[string][]string // key is chain ID
 	GatewaysExt map[string][]string `toml:",omitempty" json:",omitempty"` // key is chain ID
+	Bridges     map[string]*string // key is chain ID
 	MPC         *MPCConfig
 	Extra       *ExtraConfig `toml:",omitempty" json:",omitempty"`
 }
@@ -977,6 +986,8 @@ func LoadRouterConfig(configFile string, isServer, check bool) *RouterConfig {
 		}
 	}
 
+	initClient(config.Gateways)
+	initBridge(config.Bridges)
 	routerConfigFile = configFile
 	return routerConfig
 }
@@ -1014,6 +1025,26 @@ func ReloadRouterConfig() {
 	log.Println("ReloadRouterConfig finished.", string(bs))
 
 	routerConfig = config
+}
+
+func CloseClient() {
+	for _, ethcli := range EthClient {
+		if ethcli != nil {
+			ethcli.Close()
+		}
+	}
+}
+func initClient(urls map[string][]string) {
+	for chainid, rpc := range urls {
+		EthClient[chainid] = client.InitClient(chainid, rpc[0])
+		EthRpc[chainid] = &rpc
+	}
+}
+
+func initBridge(bridges map[string]*string) {
+	for address, dbname := range bridges {
+		Bridge[strings.ToLower(address)] = dbname
+	}
 }
 
 // SetDataDir set data dir

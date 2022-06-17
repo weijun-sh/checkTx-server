@@ -3,9 +3,9 @@ package swapapi
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 	"os"
 
@@ -51,19 +51,16 @@ type ResultBridge struct {
 }
 
 // ===== get from log
-// CheckBridgeTxhash check bridge/router txhash
-func CheckBridgeTxhash(bridge, txhash string) *ResultCheckBridge {
+// GetLogs check bridge/router txhash
+func GetLogs(bridge, txhash string) interface{} {
 	fmt.Printf("CheckBridgeTxhash, bridge: %v, txhash: %v\n", bridge, txhash)
 	if len(bridge) == 0 || !common.IsHexHash(txhash) {
-		return &ResultCheckBridge{
-			Code: 2,
-			Msg: "bridge or txhash format error",
-		}
+		return errors.New("bridge or txhash format error")
 	}
-	return checkBridgeTxhash4Rsyslog(bridge, txhash)
+	return getLogs4Rsyslog(bridge, txhash)
 }
 
-func checkBridgeTxhash4Rsyslog(bridge, txhash string) *ResultCheckBridge {
+func getLogs4Rsyslog(bridge, txhash string) interface{} {
 	return getBridgeTxhash4Rsyslog(bridge, txhash)
 }
 
@@ -77,17 +74,13 @@ type retData struct {
 	Log *bridgeTxhashStatus `json:"log"`
 }
 
-func getBridgeTxhash4Rsyslog(bridge, txhash string) *ResultCheckBridge {
+func getBridgeTxhash4Rsyslog(bridge, txhash string) []interface{} {
 	//readLine := 10000
-	var ret ResultCheckBridge
-	var logRet string
+	var logRet []interface{}
 	filePath := fmt.Sprintf("/opt/rsyslog/dcrm-node1/%v-server.log", bridge)
 	FileHandle, err := os.Open(filePath)
 	if err != nil {
-		log.Println(err)
-		ret.Code = 1
-		ret.Msg = fmt.Sprintf("%v", err)
-		return &ret
+		return logRet
 	}
 	defer FileHandle.Close()
 	lineReader := bufio.NewReader(FileHandle)
@@ -100,27 +93,30 @@ func getBridgeTxhash4Rsyslog(bridge, txhash string) *ResultCheckBridge {
 		find := strings.Contains(string(line), txhash)
 		findStatus := strings.Contains(string(line), "status")
 		if find && findStatus {
-			logRet = string(line)
+			retStr, err := getLogsParse(string(line))
+			if err == nil {
+				logRet = append(logRet, retStr)
+			}
 		}
 	}
+	return logRet
+}
+
+func getLogsParse(logRet string) (interface{}, error) {
 	fmt.Printf("logRet: %v\n", logRet)
+	if len(logRet) == 0 {
+		return "", errors.New("log not found")
+	}
 	logSlice := strings.Split(logRet, "log ")
 	if len(logSlice) < 2 {
-		log.Println("log len < 2")
-		ret.Code = 3
-		ret.Msg = fmt.Sprintf("log len < 2")
-		return &ret
+		return "", errors.New("log wrong format")
 	}
 	fmt.Printf("logSlice: %v\n", logSlice[1])
 	var status bridgeTxhashStatus
 	if err := json.Unmarshal([]byte(logSlice[1]), &status); err != nil {
-		log.Println(err)
-		ret.Code = 4
-		ret.Msg = fmt.Sprintf("%v", err)
-		return &ret
+		return "", err
 	}
-	ret.Data.Log = &status
-	return &ret
+	return status, nil
 }
 
 type bridgeTxhashStatus struct {

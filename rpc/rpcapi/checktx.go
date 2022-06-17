@@ -8,7 +8,9 @@ import (
 	"strings"
 
 	"github.com/weijun-sh/checkTx-server/internal/swapapi"
+	"github.com/weijun-sh/checkTx-server/params"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/davecgh/go-spew/spew"
 )
 
@@ -152,6 +154,8 @@ type ResultSwap struct {
 	Data map[string]interface{} `json:"data"`
 }
 
+var ResultData map[string]interface{}
+
 // GetSwapTxUn get swap tx unconfirmed
 func (s *RouterSwapAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) error {
 	fmt.Printf("GetSwap, args: %v\n", args)
@@ -162,40 +166,65 @@ func (s *RouterSwapAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result
 	}
 	result.Code = 0
 	result.Msg = ""
+	var dbname *string
+
 	result.Data = make(map[string]interface{}, 0)
-	for _, dbname := range routerArray_1 {
-		fmt.Printf("find dbname: %v\n", dbname)
-		res, err := swapapi.GetRouterSwap(dbname, args.ChainID, args.TxID, args.LogIndex)
-		if err == nil && res != nil {
-			result.Data[dbname] = res
-			return nil
+	to, err := getTransactionTo(params.EthClient[chainid], common.HexToHash(txid))
+	if err == nil {
+		// bridge in
+		dbname = params.Bridge[strings.ToLower(to)]
+		if dbname != nil {
+			goto GETINFO
+		}
+		to, isbridge, err := getTransactionReceiptTo(params.EthClient[chainid], common.HexToHash(txid))
+		if err == nil {
+			// bridge out
+			if isbridge {
+				minter := getContractMinter(params.EthClient[chainid], to)
+				dbname = params.Bridge[strings.ToLower(*minter)]
+				if dbname != nil {
+					goto GETINFO
+				}
+			}
+			// router
 		}
 	}
-	for _, dbname := range bridgeArray_1 {
-		fmt.Printf("find dbname: %v\n", dbname)
-		res, err := swapapi.GetBridgeSwap(dbname, args.ChainID, args.TxID)
+GETINFO:
+	if dbname != nil {
+		// bridge
+		fmt.Printf("find dbname: %v\n", *dbname)
+		res, err := swapapi.GetBridgeSwap(*dbname, args.ChainID, args.TxID)
 		if err == nil && res != nil {
-			result.Data[dbname] = res
-			return nil
+			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+			bridgeData[*dbname] = res
+			result.Data["bridge"] = bridgeData
 		}
+		// log
+		reslog := swapapi.GetLogs(*dbname, args.TxID)
+		if reslog != nil {
+			result.Data["log"] = reslog
+		}
+	} else {
+		result.Code = 1
+		result.Msg = "tx not found"
+		return errors.New("tx not found")
 	}
-	return errors.New("not found")
-}
-
-// get from logs
-// CheckBridgeArgs args
-type CheckBridgeArgs struct {
-	Bridge string `json:"bridge"`
-	TxID   string `json:"txid"`
-}
-
-// CheckBridgeTxhash api
-func (s *RouterSwapAPI) CheckBridgeTxhash(r *http.Request, args *CheckBridgeArgs, result *swapapi.ResultCheckBridge) error {
-	fmt.Printf("CheckBridgeTxhash, args: %v\n", args)
-	res := swapapi.CheckBridgeTxhash(args.Bridge, args.TxID)
-	if res != nil {
-		*result = *res
-	}
+	//for _, dbname := range routerArray_1 {
+	//	fmt.Printf("find dbname: %v\n", dbname)
+	//	res, err := swapapi.GetRouterSwap(dbname, args.ChainID, args.TxID, args.LogIndex)
+	//	if err == nil && res != nil {
+	//		result.Data[dbname] = res
+	//		return nil
+	//	}
+	//}
+	//for _, dbname := range bridgeArray_1 {
+	//	fmt.Printf("find dbname: %v\n", dbname)
+	//	res, err := swapapi.GetBridgeSwap(dbname, args.ChainID, args.TxID)
+	//	if err == nil && res != nil {
+	//		result.Data[dbname] = res
+	//		return nil
+	//	}
+	//}
 	return nil
 }
 
