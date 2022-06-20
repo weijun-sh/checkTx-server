@@ -22,6 +22,12 @@ var (
 	bridgeArray_1 = []string{"BTC2BSC", "ETH2BSC", "FSN2BSC", "ETH2FSN", "ETH2Fantom", "FSN2Fantom", "FSN2ETH", "BTC2ETH", "LTC2FSN", "LTC2ETH", "LTC2BSC", "LTC2Fantom", "BLOCK2ETH", "ETH2HT", "FSN2HT", "BTC2HT", "BNB2HT", "Fantom2ETH", "FORETH2Fantom", "HT2BSC", "FORETH2BSC", "FSN2MATIC", "FSN2XDAI", "ETH2XDAI", "ETH2MATIC", "ETH2AVAX", "FSN2AVAX", "BLOCK2AVAX", "BSC2AVAX", "BSC2MATIC", "BSC2ETH", "BSC2Fantom", "Harmony2MATIC", "BTC2Harmony", "COLX2BSC", "Fantom2BSC", "ETH2KCS", "COLX2ETH", "HT2MATIC", "MATIC2BSC", "MATIC2AVAX", "BSC2KCS", "BSC2Harmony", "BSC2OKT", "MATIC2OKT", "BLOCK2MATIC", "BLOCK2BSC", "BSC2MOON", "ETH2MOON", "MATIC2Fantom", "ETH2ARB", "ARB2ETH", "BSC2ARB", "MATIC2MOON", "BSC2IOTEX", "BSC2SHI", "ETH2SHI", "MOON2ETH", "BSC2CELO", "AVAX2Fantom", "ETH2HARM", "HT2Fantom", "ARB2MOON", "AVAX2BSC", "MOON2BSC", "ARB2MATIC", "ETH2TLOS", "CELO2BSC", "TERRA2Fantom", "MOON2SHI", "MATIC2HT", "ETH2IOTEX", "Harmony2BSC", "ETH2MOONBEAM", "BSC2MOONBEAM", "ETH2BOBA", "SHI2BSC", "ETH2astar", "ETH2OKT", "MATIC2ETH", "MATIC2Harmony", "MATIC2MOONBEAM", "AVAX2MOONBEAM", "BSC2astar", "BSC2ROSE", "ETH2ROSE", "ETH2VELAS", "MATIC2XDAI", "IOTEX2BSC", "XRP2AVAX", "ETH2CLV", "ETH2MIKO", "XRP2AVAX", "ETH2MIKO", "ETH2CONFLUX", "KCC2CONFLUX", "ETH2OPTIMISM", "ETH2RSK", "BSC2RSK", "JEWEL2Harmony", "TERRA2ETH", "ETH2EVMOS", "ETH2DOGE", "ETH2ETC", "ETH2CMP", "USDT2Fantom"}
 )
 
+const (
+	swapinTopic = iota + 1
+	swapoutTopic
+	routerTopic
+)
+
 type ResultStatus struct {
 	Code uint64 `json:"code"`
 	Msg string `json:"msg"`
@@ -178,11 +184,17 @@ func (s *RouterSwapAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result
 		}
 		to, isbridge, err := getTransactionReceiptTo(params.EthClient[chainid], common.HexToHash(txid))
 		if err == nil {
-			// bridge out
-			if isbridge {
-				minter := getContractMinter(params.EthClient[chainid], to)
-				dbname = params.Bridge[strings.ToLower(*minter)]
+			// contract
+			if isBridgeSwapin(isbridge) {
+				dbname = params.Bridge[strings.ToLower(to)]
 				if dbname != nil {
+					goto GETINFO
+				}
+			}
+			if isBridgeSwapout(isbridge) {
+				minter, err := GetOwnerAddress(params.EthClient[chainid], to)
+				dbname = params.Bridge[strings.ToLower(minter)]
+				if err == nil && dbname != nil {
 					goto GETINFO
 				}
 			}
@@ -226,5 +238,12 @@ GETINFO:
 	//	}
 	//}
 	return nil
+}
+
+func isBridgeSwapin(topic int) bool {
+	return topic == swapinTopic
+}
+func isBridgeSwapout(topic int) bool {
+	return topic == swapoutTopic
 }
 

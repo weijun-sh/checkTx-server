@@ -12,6 +12,7 @@ import (
 	rpcclient "github.com/weijun-sh/checkTx-server/rpc/client"
 	"github.com/weijun-sh/checkTx-server/tokens"
 
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
@@ -65,34 +66,41 @@ func getTransactionTo(client *ethclient.Client, txHash common.Hash) (string, err
 }
 
 //txHash = common.HexToHash(hash)
-func getTransactionReceiptTo(client *ethclient.Client, txHash common.Hash) (string, bool, error) {
+func getTransactionReceiptTo(client *ethclient.Client, txHash common.Hash) (string, int, error) {
 	for i := 0; i< 3; i++ {
 		receipt, err := client.TransactionReceipt(context.Background(), txHash)
 		if err == nil {
 			spew.Printf("getTransactionReceiptTo, receipt: %#v\n", receipt.Logs)
 			if len(receipt.Logs) == 0 {
-				return "", false, errors.New("no receipt")
+				return "", 0, errors.New("no receipt")
 			}
 			for _, log := range receipt.Logs {
 				fmt.Printf("topic: %v\n", log.Topics[0])
 				logTopic := log.Topics[0].String()
 				if isRouterTopic(logTopic) {
-					return log.Address.String(), false, nil
+					return log.Address.String(), routerTopic, nil
 				}
 			}
 			for _, log := range receipt.Logs {
 				fmt.Printf("topic: %v\n", log.Topics[0])
 				logTopic := log.Topics[0].String()
-				if isBridgeTopic(logTopic) {
-					return log.Address.String(), true, nil
+				if isSwapoutTopic(logTopic) {
+					return log.Address.String(), swapoutTopic, nil
 				}
 			}
-			return "", false, errors.New("get receipt topic mismatch")
+			for _, log := range receipt.Logs {
+				fmt.Printf("topic: %v\n", log.Topics[0])
+				logTopic := log.Topics[0].String()
+				if isSwapinTopic(logTopic) {
+					return string(common.BytesToAddress(log.Topics[2][:]).Hex()), swapinTopic, nil
+				}
+			}
+			return "", 0, errors.New("get receipt topic mismatch")
 		}
 		fmt.Printf("getTransactionReceiptTo, txHash: %v, err: %v\n", txHash, err)
 		time.Sleep(1 * time.Second)
 	}
-	return "", false, errors.New("get receipt failed")
+	return "", 0, errors.New("get receipt failed")
 }
 
 func getContractMinter(client *ethclient.Client, contract string) *string {
@@ -142,9 +150,19 @@ func getCode(contract string, urls *[]string) ([]byte, error) {
 	return nil, wrapRPCQueryError(err, "eth_getCode", contract)
 }
 
-func isBridgeTopic(logTopic string) bool {
-	for _, topic := range []string{transferLogTopic, addressSwapoutLogTopic, stringSwapoutLogTopic} {
-		fmt.Printf("isBridge, logTopic: %v, topic: %v\n", logTopic, topic)
+func isSwapinTopic(logTopic string) bool {
+	for _, topic := range []string{transferLogTopic} {
+		//fmt.Printf("isBridgeSwapin, logTopic: %v, topic: %v\n", logTopic, topic)
+		if strings.EqualFold(logTopic, topic) {
+			return true
+		}
+	}
+	return false
+}
+
+func isSwapoutTopic(logTopic string) bool {
+	for _, topic := range []string{addressSwapoutLogTopic, stringSwapoutLogTopic} {
+		//fmt.Printf("isBridgeSwapout, logTopic: %v, topic: %v\n", logTopic, topic)
 		if strings.EqualFold(logTopic, topic) {
 			return true
 		}
@@ -154,11 +172,28 @@ func isBridgeTopic(logTopic string) bool {
 
 func isRouterTopic(logTopic string) bool {
 	for _, topic := range []string{routerAnySwapOutTopic,routerAnySwapOutTopic2, routerAnySwapTradeTokensForTokensTopic, routerAnySwapTradeTokensForNativeTopic, logNFT721SwapOutTopic, logNFT1155SwapOutTopic, logNFT1155SwapOutBatchTopic, logAnycallSwapOutTopic, logAnycallTransferSwapOutTopic, logAnycallV6SwapOutTopic} {
-		fmt.Printf("isRouterTopic, logTopic: %v, topic: %v\n", logTopic, topic)
+		//fmt.Printf("isRouterTopic, logTopic: %v, topic: %v\n", logTopic, topic)
 		if strings.EqualFold(logTopic, topic) {
 			return true
 		}
 	}
 	return false
+}
+
+// GetOwnerAddress call "owner()"
+func GetOwnerAddress(client *ethclient.Client, contract string) (string, error) {
+        data := common.FromHex("0x8da5cb5b")
+
+        to := common.HexToAddress(contract)
+        msg := ethereum.CallMsg{
+                To:   &to,
+                Data: data,
+        }
+        result, err := client.CallContract(context.Background(), msg, nil)
+        if err != nil {
+                return "", err
+        }
+	//fmt.Printf("GetOwnerAddress, result: %v\n", string(common.BytesToAddress(result).Hex()))
+	return string(common.BytesToAddress(result).Hex()), nil
 }
 
