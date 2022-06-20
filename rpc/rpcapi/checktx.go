@@ -200,7 +200,7 @@ GETINFO:
 			result.Data["bridge"] = bridgeData
 		}
 		// log
-		reslog := swapapi.GetLogs(*dbname, args.TxID)
+		reslog := swapapi.GetFileLogs(*dbname, args.TxID)
 		if reslog != nil {
 			result.Data["log"] = reslog
 		}

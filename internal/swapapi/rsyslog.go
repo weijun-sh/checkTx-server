@@ -6,11 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
+	"io/ioutil"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/weijun-sh/checkTx-server/common"
 	"github.com/weijun-sh/checkTx-server/mongodb"
+	"github.com/weijun-sh/checkTx-server/params"
 )
 
 var (
@@ -52,15 +55,15 @@ type ResultBridge struct {
 
 // ===== get from log
 // GetLogs check bridge/router txhash
-func GetLogs(bridge, txhash string) interface{} {
-	fmt.Printf("CheckBridgeTxhash, bridge: %v, txhash: %v\n", bridge, txhash)
+func GetFileLogs(bridge, txhash string) interface{} {
+	//fmt.Printf("GetFileLogs, bridge: %v, txhash: %v\n", bridge, txhash)
 	if len(bridge) == 0 || !common.IsHexHash(txhash) {
 		return errors.New("bridge or txhash format error")
 	}
-	return getLogs4Rsyslog(bridge, txhash)
+	return getFileLogs4Rsyslog(bridge, txhash)
 }
 
-func getLogs4Rsyslog(bridge, txhash string) interface{} {
+func getFileLogs4Rsyslog(bridge, txhash string) interface{} {
 	return getBridgeTxhash4Rsyslog(bridge, txhash)
 }
 
@@ -74,36 +77,70 @@ type retData struct {
 	Log *bridgeTxhashStatus `json:"log"`
 }
 
-func getBridgeTxhash4Rsyslog(bridge, txhash string) []interface{} {
-	//readLine := 10000
-	var logRet []interface{}
-	filePath := fmt.Sprintf("/opt/rsyslog/dcrm-node1/%v-server.log", bridge)
-	FileHandle, err := os.Open(filePath)
-	if err != nil {
-		return logRet
+func getRsyslogFiles(bridge string) []string {
+	var ret []string
+	dir := params.GetRsyslogDir()
+	if dir == "" {
+		return ret
 	}
-	defer FileHandle.Close()
-	lineReader := bufio.NewReader(FileHandle)
-	//for i := 0; i < readLine; i++ {
-	for {
-		line, _, err := lineReader.ReadLine()
-		if err == io.EOF {
+	suffix := params.GetRsyslogSuffix()
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return ret
+	}
+	filename := fmt.Sprintf("%v%v", bridge, suffix)
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		fileNameWithSuffix := path.Base(file.Name())
+		if strings.HasPrefix(fileNameWithSuffix, filename) {
+			filenametmp := fmt.Sprintf("%v/%v", dir, file.Name())
+			ret = append(ret, filenametmp)
+		}
+	}
+	return ret
+}
+
+func getBridgeTxhash4Rsyslog(bridge, txhash string) []interface{} {
+	var logRet []interface{}
+	finish := 2 // find 2 files, from newest
+	logFiles := getRsyslogFiles(bridge)
+	for _, filePath := range logFiles {
+		if finish <= 0 {
 			break
 		}
-		find := strings.Contains(string(line), txhash)
-		findStatus := strings.Contains(string(line), "status")
-		if find && findStatus {
-			retStr, err := getLogsParse(string(line))
-			if err == nil {
-				logRet = append(logRet, retStr)
+		FileHandle, err := os.Open(filePath) // read only
+		if err != nil {
+			continue
+		}
+		defer FileHandle.Close()
+		lineReader := bufio.NewReader(FileHandle)
+		find := false
+		for {
+			line, _, err := lineReader.ReadLine()
+			if err == io.EOF {
+				break
 			}
+			find := strings.Contains(string(line), txhash)
+			findStatus := strings.Contains(string(line), "status")
+			if find && findStatus {
+				retStr, err := getLogsParse(string(line))
+				if err == nil {
+					find = true
+					logRet = append(logRet, retStr)
+				}
+			}
+		}
+		if find {
+			finish -= 1
 		}
 	}
 	return logRet
 }
 
 func getLogsParse(logRet string) (interface{}, error) {
-	fmt.Printf("logRet: %v\n", logRet)
+	//fmt.Printf("logRet: %v\n", logRet)
 	if len(logRet) == 0 {
 		return "", errors.New("log not found")
 	}
@@ -111,7 +148,7 @@ func getLogsParse(logRet string) (interface{}, error) {
 	if len(logSlice) < 2 {
 		return "", errors.New("log wrong format")
 	}
-	fmt.Printf("logSlice: %v\n", logSlice[1])
+	//fmt.Printf("logSlice: %v\n", logSlice[1])
 	var status bridgeTxhashStatus
 	if err := json.Unmarshal([]byte(logSlice[1]), &status); err != nil {
 		return "", err

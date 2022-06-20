@@ -16,6 +16,7 @@ import (
 // router swap constants
 const (
 	RouterSwapPrefixID = "routerswap"
+	RsyslogSuffix = "-server.log"
 )
 
 
@@ -62,6 +63,7 @@ var (
 // exported variables
 var (
 	GetBalanceBlockNumberOpt = "latest" // latest or pending
+	rsyslogDir = ""
 )
 
 // RouterServerConfig only for server
@@ -99,6 +101,10 @@ type RouterServerConfig struct {
 	DynamicFeeTx map[string]*DynamicFeeTxConfig `toml:",omitempty" json:",omitempty"` // key is chain ID
 }
 
+type rsyslogConfig struct {
+	Dir string
+}
+
 // RouterOracleConfig only for oracle
 type RouterOracleConfig struct {
 	ServerAPIAddress        string
@@ -114,6 +120,7 @@ type RouterConfig struct {
 	SwapType    string
 	SwapSubType string
 	Onchain     *OnchainConfig
+	Rsyslog     rsyslogConfig
 	Gateways    map[string][]string // key is chain ID
 	GatewaysExt map[string][]string `toml:",omitempty" json:",omitempty"` // key is chain ID
 	Bridges     map[string]*string // key is chain ID
@@ -986,6 +993,7 @@ func LoadRouterConfig(configFile string, isServer, check bool) *RouterConfig {
 		}
 	}
 
+	setRsyslogDir(config.Rsyslog.Dir)
 	initClient(config.Gateways)
 	initBridge(config.Bridges)
 	routerConfigFile = configFile
@@ -1067,3 +1075,26 @@ func SetDataDir(dir string, isServer bool) {
 func GetDataDir() string {
 	return locDataDir
 }
+
+// setRsyslogDir set Log dir
+func setRsyslogDir(dir string) {
+	if dir == "" {
+		log.Warn("suggest config rsyslog dir")
+		return
+	}
+	currDir, err := common.CurrentDir()
+	if err != nil {
+		log.Fatal("get current dir failed", "err", err)
+	}
+	rsyslogDir = common.AbsolutePath(currDir, dir)
+	log.Info("set rsyslog dir success", "rsyslogdir", rsyslogDir)
+}
+
+func GetRsyslogDir() string {
+	return rsyslogDir
+}
+
+func GetRsyslogSuffix() string {
+	return RsyslogSuffix
+}
+

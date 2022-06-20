@@ -16,6 +16,9 @@ AllowedOrigins = ["*"]
 # Maximum number of requests to limit per second
 MaxRequestsLimit = 100
 
+[Rsyslog]
+Dir = "/opt/rsyslog/dcrm-node1"
+
 # Gateways config. key is chainID
 [Gateways]
 1     = ["https://nodes.mewapi.io/rpc/eth", ""]
