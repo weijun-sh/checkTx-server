@@ -16,7 +16,8 @@ import (
 // router swap constants
 const (
 	RouterSwapPrefixID = "routerswap"
-	RsyslogSuffix = "-server.log"
+	RsyslogBridgeSuffix = "-server.log"
+	RsyslogRouterSuffix = "-routerswap.log"
 )
 
 
@@ -28,7 +29,8 @@ var (
 
 	EthClient map[string]*ethclient.Client = make(map[string]*ethclient.Client, 0)
 	EthRpc map[string]*[]string = make(map[string]*[]string, 0)
-	Bridge map[string]*string               = make(map[string]*string, 0)
+	Router map[string][]string   = make(map[string][]string, 0)
+	Bridge map[string]*string   = make(map[string]*string, 0)
 
 	routerConfigFile string
 	locDataDir       string
@@ -123,6 +125,7 @@ type RouterConfig struct {
 	Rsyslog     rsyslogConfig
 	Gateways    map[string][]string // key is chain ID
 	GatewaysExt map[string][]string `toml:",omitempty" json:",omitempty"` // key is chain ID
+	Routers     map[string][]string // key is 0,1
 	Bridges     map[string]*string // key is chain ID
 	MPC         *MPCConfig
 	Extra       *ExtraConfig `toml:",omitempty" json:",omitempty"`
@@ -995,6 +998,7 @@ func LoadRouterConfig(configFile string, isServer, check bool) *RouterConfig {
 
 	setRsyslogDir(config.Rsyslog.Dir)
 	initClient(config.Gateways)
+	initRouter(config.Routers)
 	initBridge(config.Bridges)
 	routerConfigFile = configFile
 	return routerConfig
@@ -1055,6 +1059,12 @@ func initBridge(bridges map[string]*string) {
 	}
 }
 
+func initRouter(routers map[string][]string) {
+	for server, router := range routers {
+		Router[strings.ToLower(server)] = router
+	}
+}
+
 // SetDataDir set data dir
 func SetDataDir(dir string, isServer bool) {
 	if dir == "" {
@@ -1094,7 +1104,10 @@ func GetRsyslogDir() string {
 	return rsyslogDir
 }
 
-func GetRsyslogSuffix() string {
-	return RsyslogSuffix
+func GetRsyslogSuffix(isbridge bool) string {
+	if isbridge {
+		return RsyslogBridgeSuffix
+	}
+	return RsyslogRouterSuffix
 }
 

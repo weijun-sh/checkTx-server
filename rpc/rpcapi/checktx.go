@@ -175,44 +175,33 @@ func (s *RouterSwapAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result
 	var dbname *string
 
 	result.Data = make(map[string]interface{}, 0)
+	isbridge := true
 	to, err := getTransactionTo(params.EthClient[chainid], common.HexToHash(txid))
 	if err == nil {
-		// bridge in
+		// bridge deposit
 		dbname = params.Bridge[strings.ToLower(to)]
-		if dbname != nil {
-			goto GETINFO
-		}
-		to, isbridge, err := getTransactionReceiptTo(params.EthClient[chainid], common.HexToHash(txid))
-		if err == nil {
-			// contract
-			if isBridgeSwapin(isbridge) {
-				dbname = params.Bridge[strings.ToLower(to)]
-				if dbname != nil {
-					goto GETINFO
-				}
-			}
-			if isBridgeSwapout(isbridge) {
-				minter, err := GetOwnerAddress(params.EthClient[chainid], to)
-				dbname = params.Bridge[strings.ToLower(minter)]
-				if err == nil && dbname != nil {
-					goto GETINFO
-				}
-			}
-			// router
+		if dbname == nil {
+			dbname, isbridge = getAddress4Contract(chainid, txid)
 		}
 	}
-GETINFO:
 	if dbname != nil {
+		var res interface{}
+		var err error
 		// bridge
-		fmt.Printf("find dbname: %v\n", *dbname)
-		res, err := swapapi.GetBridgeSwap(*dbname, args.ChainID, args.TxID)
+		if isbridge {
+			fmt.Printf("find bridge dbname: %v\n", *dbname)
+			res, err = swapapi.GetBridgeSwap(*dbname, args.ChainID, args.TxID)
+		} else {
+			fmt.Printf("find router dbname: %v\n", *dbname)
+			res, err = swapapi.GetRouterSwap(*dbname, args.ChainID, args.TxID, "0")
+		}
 		if err == nil && res != nil {
 			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
 			bridgeData[*dbname] = res
 			result.Data["bridge"] = bridgeData
 		}
 		// log
-		reslog := swapapi.GetFileLogs(*dbname, args.TxID)
+		reslog := swapapi.GetFileLogs(*dbname, args.TxID, isbridge)
 		if reslog != nil {
 			result.Data["log"] = reslog
 		}
@@ -238,6 +227,42 @@ GETINFO:
 	//	}
 	//}
 	return nil
+}
+
+func getAddress4Contract(chainid, txid string) (*string, bool) {
+	var dbname *string
+	isbridge := true
+	to, topic, err := getTransactionReceiptTo(params.EthClient[chainid], common.HexToHash(txid))
+	fmt.Printf("getTransactionReceiptTo, to: %v\n", to)
+	if err != nil {
+		fmt.Printf("getTransactionReceiptTo, chainid: %v, txid: %v, err: %v\n", chainid, txid, err)
+		return nil, false
+	}
+	switch(topic) {
+	//case swapinTopic:
+	//	fmt.Printf("getTransactionReceiptTo, isBridgeSwapin\n")
+	//	dbname = params.Bridge[strings.ToLower(to)]
+	case swapoutTopic:
+		fmt.Printf("getTransactionReceiptTo, isBridgeSwapout\n")
+		minter, err := GetMinersAddress(params.EthClient[chainid], to)
+		if err == nil {
+			dbname = params.Bridge[strings.ToLower(minter)]
+		} else {
+			minter, err := GetOwnerAddress(params.EthClient[chainid], to)
+			if err == nil {
+				dbname = params.Bridge[strings.ToLower(minter)]
+			}
+		}
+	case routerTopic:
+		minter, err := GetRouterAddress(params.EthClient["56"], chainid, to)
+		fmt.Printf("getTransactionReceiptTo, isRouter, minter: %v, err: %v\n", minter, err)
+		if err == nil {
+			dbname = params.Bridge[strings.ToLower(minter)]
+			isbridge = false
+		}
+	}
+
+	return dbname, isbridge
 }
 
 func isBridgeSwapin(topic int) bool {

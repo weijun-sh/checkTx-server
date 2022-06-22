@@ -55,16 +55,12 @@ type ResultBridge struct {
 
 // ===== get from log
 // GetLogs check bridge/router txhash
-func GetFileLogs(bridge, txhash string) interface{} {
+func GetFileLogs(dbname, txhash string, isbridge bool) interface{} {
 	//fmt.Printf("GetFileLogs, bridge: %v, txhash: %v\n", bridge, txhash)
-	if len(bridge) == 0 || !common.IsHexHash(txhash) {
+	if len(dbname) == 0 || !common.IsHexHash(txhash) {
 		return errors.New("bridge or txhash format error")
 	}
-	return getFileLogs4Rsyslog(bridge, txhash)
-}
-
-func getFileLogs4Rsyslog(bridge, txhash string) interface{} {
-	return getBridgeTxhash4Rsyslog(bridge, txhash)
+	return getBridgeTxhash4Rsyslog(dbname, txhash, isbridge)
 }
 
 type ResultCheckBridge struct {
@@ -77,18 +73,18 @@ type retData struct {
 	Log *bridgeTxhashStatus `json:"log"`
 }
 
-func getRsyslogFiles(bridge string) []string {
+func getRsyslogFiles(dbname string, isbridge bool) []string {
 	var ret []string
 	dir := params.GetRsyslogDir()
 	if dir == "" {
 		return ret
 	}
-	suffix := params.GetRsyslogSuffix()
+	suffix := params.GetRsyslogSuffix(isbridge)
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return ret
 	}
-	filename := fmt.Sprintf("%v%v", bridge, suffix)
+	filename := fmt.Sprintf("%v%v", dbname, suffix)
 	for _, file := range files {
 		if file.IsDir() {
 			continue
@@ -102,10 +98,10 @@ func getRsyslogFiles(bridge string) []string {
 	return ret
 }
 
-func getBridgeTxhash4Rsyslog(bridge, txhash string) []interface{} {
+func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) []interface{} {
 	var logRet []interface{}
 	finish := 2 // find 2 files, from newest
-	logFiles := getRsyslogFiles(bridge)
+	logFiles := getRsyslogFiles(dbname, isbridge)
 	for _, filePath := range logFiles {
 		if finish <= 0 {
 			break

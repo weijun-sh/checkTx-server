@@ -5,18 +5,19 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"strconv"
 	"time"
 
 	"github.com/weijun-sh/checkTx-server/common/hexutil"
 	"github.com/weijun-sh/checkTx-server/log"
 	rpcclient "github.com/weijun-sh/checkTx-server/rpc/client"
+	"github.com/weijun-sh/checkTx-server/params"
 	"github.com/weijun-sh/checkTx-server/tokens"
+	"github.com/weijun-sh/checkTx-server/tokens/eth/abicoder"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 var (
@@ -53,13 +54,15 @@ var (
 
 //txHash = common.HexToHash(hash)
 func getTransactionTo(client *ethclient.Client, txHash common.Hash) (string, error) {
+	if client == nil {
+		return "", errors.New("client is nil")
+	}
 	for i := 0; i< 3; i++ {
-		tx, tx2, err := client.TransactionByHash(context.Background(), txHash)
+		tx, _, err := client.TransactionByHash(context.Background(), txHash)
 		if err == nil {
-			spew.Printf("getTransactionTo, tx: %#v, tx2: %#v\n", tx, tx2)
 			return tx.To().String(), nil
 		}
-		fmt.Printf("getTransactionTo, err: %v\n", err)
+		//fmt.Printf("getTransactionTo, err: %v\n", err)
 		time.Sleep(1 * time.Second)
 	}
 	return "", errors.New("get tx failed")
@@ -70,34 +73,33 @@ func getTransactionReceiptTo(client *ethclient.Client, txHash common.Hash) (stri
 	for i := 0; i< 3; i++ {
 		receipt, err := client.TransactionReceipt(context.Background(), txHash)
 		if err == nil {
-			spew.Printf("getTransactionReceiptTo, receipt: %#v\n", receipt.Logs)
 			if len(receipt.Logs) == 0 {
 				return "", 0, errors.New("no receipt")
 			}
 			for _, log := range receipt.Logs {
-				fmt.Printf("topic: %v\n", log.Topics[0])
+				//fmt.Printf("topic: %v\n", log.Topics[0])
 				logTopic := log.Topics[0].String()
 				if isRouterTopic(logTopic) {
 					return log.Address.String(), routerTopic, nil
 				}
 			}
 			for _, log := range receipt.Logs {
-				fmt.Printf("topic: %v\n", log.Topics[0])
+				//fmt.Printf("topic: %v\n", log.Topics[0])
 				logTopic := log.Topics[0].String()
 				if isSwapoutTopic(logTopic) {
 					return log.Address.String(), swapoutTopic, nil
 				}
 			}
-			for _, log := range receipt.Logs {
-				fmt.Printf("topic: %v\n", log.Topics[0])
-				logTopic := log.Topics[0].String()
-				if isSwapinTopic(logTopic) {
-					return string(common.BytesToAddress(log.Topics[2][:]).Hex()), swapinTopic, nil
-				}
-			}
+			//for _, log := range receipt.Logs {
+			//	fmt.Printf("topic: %v\n", log.Topics[0])
+			//	logTopic := log.Topics[0].String()
+			//	if isSwapinTopic(logTopic) {
+			//		return string(common.BytesToAddress(log.Topics[2][:]).Hex()), swapinTopic, nil
+			//	}
+			//}
 			return "", 0, errors.New("get receipt topic mismatch")
 		}
-		fmt.Printf("getTransactionReceiptTo, txHash: %v, err: %v\n", txHash, err)
+		//fmt.Printf("getTransactionReceiptTo, txHash: %v, err: %v\n", txHash, err)
 		time.Sleep(1 * time.Second)
 	}
 	return "", 0, errors.New("get receipt failed")
@@ -182,6 +184,7 @@ func isRouterTopic(logTopic string) bool {
 
 // GetOwnerAddress call "owner()"
 func GetOwnerAddress(client *ethclient.Client, contract string) (string, error) {
+	fmt.Printf("GetOwnerAddress\n")
         data := common.FromHex("0x8da5cb5b")
 
         to := common.HexToAddress(contract)
@@ -195,5 +198,65 @@ func GetOwnerAddress(client *ethclient.Client, contract string) (string, error) 
         }
 	//fmt.Printf("GetOwnerAddress, result: %v\n", string(common.BytesToAddress(result).Hex()))
 	return string(common.BytesToAddress(result).Hex()), nil
+}
+
+// GetMintersAddress call "getAllMinters()"
+func GetMinersAddress(client *ethclient.Client, contract string) (string, error) {
+	//fmt.Printf("GetMinersAddress\n")
+        data := common.FromHex("0xa045442c")
+
+        to := common.HexToAddress(contract)
+        msg := ethereum.CallMsg{
+                To:   &to,
+                Data: data,
+        }
+        result, err := client.CallContract(context.Background(), msg, nil)
+        if err != nil {
+                return "", err
+        }
+	fmt.Printf("GetOwnerAddress, result: %v\n", string(common.BytesToAddress(result).Hex()))
+	return string(common.BytesToAddress(result).Hex()), nil
+}
+
+func GetRouterAddress(client *ethclient.Client, chainid, to string) (string, error) {
+	for _, router := range params.Router {
+		for _, r := range router {
+			address, err := getRouterAddress(client, r, chainid)
+			if err == nil && strings.EqualFold(address, to) {
+				return r, nil
+			}
+			//fmt.Printf("router: %v\n", router)
+		}
+	}
+	return "",nil
+}
+
+// getRouterAddress call "getChainConfig(uint256)"
+func getRouterAddress(client *ethclient.Client, contract string, chainid string) (string, error) {
+	//fmt.Printf("GetRouterAddress\n")
+	data := make(hexutil.Bytes, 36)
+	copy(data[:4], common.FromHex("0x19ed16dc"))
+	n, _ := strconv.ParseUint(chainid, 10, 32)
+	copy(data[4:], common.LeftPadBytes(common.FromHex(fmt.Sprintf("0x%x", n)), 32))
+
+        to := common.HexToAddress(contract)
+        msg := ethereum.CallMsg{
+                To:   &to,
+                Data: data,
+        }
+        result, err := client.CallContract(context.Background(), msg, nil)
+	//fmt.Printf("err: %v\n", err)
+        if err != nil {
+                return "", err
+        }
+	//fmt.Printf("getRouterAddress, result: %v\n", result)
+	return getChainConfigAddress(result)
+}
+
+func getChainConfigAddress(data []byte) (string, error) {
+        if uint64(len(data)) < 224 {
+                return "", abicoder.ErrParseDataError
+        }
+	return string(common.BytesToAddress(data[64:96]).Hex()), nil
 }
 
