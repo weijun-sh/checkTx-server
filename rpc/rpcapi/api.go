@@ -13,8 +13,8 @@ import (
 	"github.com/weijun-sh/checkTx-server/tokens"
 )
 
-// RouterSwapAPI rpc api handler
-type RouterSwapAPI struct{}
+// RPCAPI rpc api handler
+type RPCAPI struct{}
 
 // RPCNullArgs null args
 type RPCNullArgs struct{}
@@ -27,14 +27,14 @@ type RouterSwapKeyArgs struct {
 }
 
 // GetVersionInfo api
-func (s *RouterSwapAPI) GetVersionInfo(r *http.Request, args *RPCNullArgs, result *string) error {
+func (s *RPCAPI) GetVersionInfo(r *http.Request, args *RPCNullArgs, result *string) error {
 	version := params.VersionWithMeta
 	*result = version
 	return nil
 }
 
 // GetServerInfo api
-func (s *RouterSwapAPI) GetServerInfo(r *http.Request, args *RPCNullArgs, result *swapapi.ServerInfo) error {
+func (s *RPCAPI) GetServerInfo(r *http.Request, args *RPCNullArgs, result *swapapi.ServerInfo) error {
 	serverInfo := swapapi.GetServerInfo()
 	*result = *serverInfo
 	return nil
@@ -43,7 +43,7 @@ func (s *RouterSwapAPI) GetServerInfo(r *http.Request, args *RPCNullArgs, result
 type getOracleInfoResult map[string]*swapapi.OracleInfo
 
 // GetOracleInfo api
-func (s *RouterSwapAPI) GetOracleInfo(r *http.Request, args *RPCNullArgs, result *getOracleInfoResult) error {
+func (s *RPCAPI) GetOracleInfo(r *http.Request, args *RPCNullArgs, result *getOracleInfoResult) error {
 	oracleInfo := swapapi.GetOracleInfo()
 	*result = oracleInfo
 	return nil
@@ -63,7 +63,7 @@ func (args *OracleInfoArgs) toOracleInfo() *swapapi.OracleInfo {
 }
 
 // ReportOracleInfo api
-func (s *RouterSwapAPI) ReportOracleInfo(r *http.Request, args *OracleInfoArgs, result *string) error {
+func (s *RPCAPI) ReportOracleInfo(r *http.Request, args *OracleInfoArgs, result *string) error {
 	err := swapapi.ReportOracleInfo(args.Enode, args.toOracleInfo())
 	if err != nil {
 		return err
@@ -73,7 +73,7 @@ func (s *RouterSwapAPI) ReportOracleInfo(r *http.Request, args *OracleInfoArgs, 
 }
 
 // GetRouterSwap api
-func (s *RouterSwapAPI) GetRouterSwap(r *http.Request, args *RouterSwapKeyArgs, result *swapapi.SwapInfo) error {
+func (s *RPCAPI) GetRouterSwap(r *http.Request, args *RouterSwapKeyArgs, result *swapapi.SwapInfo) error {
 	res, err := swapapi.GetRouterSwap("", args.ChainID, args.TxID, args.LogIndex)
 	if err == nil && res != nil {
 		*result = *res
@@ -91,7 +91,7 @@ type RouterGetSwapHistoryArgs struct {
 }
 
 // GetRouterSwapHistory api
-func (s *RouterSwapAPI) GetRouterSwapHistory(r *http.Request, args *RouterGetSwapHistoryArgs, result *[]*swapapi.SwapInfo) error {
+func (s *RPCAPI) GetRouterSwapHistory(r *http.Request, args *RouterGetSwapHistoryArgs, result *[]*swapapi.SwapInfo) error {
 	res, err := swapapi.GetRouterSwapHistory("", args.ChainID, args.Address, args.Offset, args.Limit, args.Status)
 	if err == nil && res != nil {
 		*result = res
@@ -100,20 +100,20 @@ func (s *RouterSwapAPI) GetRouterSwapHistory(r *http.Request, args *RouterGetSwa
 }
 
 // GetAllChainIDs api
-func (s *RouterSwapAPI) GetAllChainIDs(r *http.Request, args *RPCNullArgs, result *[]*big.Int) error {
+func (s *RPCAPI) GetAllChainIDs(r *http.Request, args *RPCNullArgs, result *[]*big.Int) error {
 	*result = router.AllChainIDs
 	return nil
 }
 
 // GetAllTokenIDs api
-func (s *RouterSwapAPI) GetAllTokenIDs(r *http.Request, args *RPCNullArgs, result *[]string) error {
+func (s *RPCAPI) GetAllTokenIDs(r *http.Request, args *RPCNullArgs, result *[]string) error {
 	*result = router.AllTokenIDs
 	return nil
 }
 
 // GetAllMultichainTokens api
 // nolint:gocritic // rpc need result of pointer type
-func (s *RouterSwapAPI) GetAllMultichainTokens(r *http.Request, args *string, result *map[string]string) error {
+func (s *RPCAPI) GetAllMultichainTokens(r *http.Request, args *string, result *map[string]string) error {
 	tokenID := *args
 	var m map[string]string
 	tokensMap := router.GetCachedMultichainTokens(tokenID)
@@ -130,7 +130,7 @@ func (s *RouterSwapAPI) GetAllMultichainTokens(r *http.Request, args *string, re
 }
 
 // GetChainConfig api
-func (s *RouterSwapAPI) GetChainConfig(r *http.Request, args *string, result *swapapi.ChainConfig) error {
+func (s *RPCAPI) GetChainConfig(r *http.Request, args *string, result *swapapi.ChainConfig) error {
 	chainID := *args
 	bridge := router.GetBridgeByChainID(chainID)
 	if bridge == nil {
@@ -151,7 +151,7 @@ type GetTokenConfigArgs struct {
 }
 
 // GetTokenConfig api
-func (s *RouterSwapAPI) GetTokenConfig(r *http.Request, args *GetTokenConfigArgs, result *swapapi.TokenConfig) error {
+func (s *RPCAPI) GetTokenConfig(r *http.Request, args *GetTokenConfigArgs, result *swapapi.TokenConfig) error {
 	chainID := args.ChainID
 	address := args.Address
 	bridge := router.GetBridgeByChainID(chainID)
@@ -176,7 +176,7 @@ type GetSwapConfigArgs struct {
 }
 
 // GetSwapConfig api
-func (s *RouterSwapAPI) GetSwapConfig(r *http.Request, args *GetSwapConfigArgs, result *swapapi.SwapConfig) error {
+func (s *RPCAPI) GetSwapConfig(r *http.Request, args *GetSwapConfigArgs, result *swapapi.SwapConfig) error {
 	tokenID := args.TokenID
 	chainID := args.ChainID
 	swapConfig := swapapi.ConvertSwapConfig(tokens.GetSwapConfig(tokenID, chainID))

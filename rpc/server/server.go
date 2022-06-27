@@ -114,7 +114,7 @@ func doCleanup(svr *http.Server) {
 func initRouterSwapRouter(r *mux.Router) {
 	rpcserver := rpc.NewServer()
 	rpcserver.RegisterCodec(rpcjson.NewCodec(), "application/json")
-	err := rpcserver.RegisterService(new(rpcapi.RouterSwapAPI), "swap")
+	err := rpcserver.RegisterService(new(rpcapi.RPCAPI), "swap")
 	if err != nil {
 		log.Fatal("start rpc service failed", "err", err)
 	}

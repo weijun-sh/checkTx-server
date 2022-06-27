@@ -34,7 +34,7 @@ const (
 )
 
 // AdminCall admin call
-func (s *RouterSwapAPI) AdminCall(r *http.Request, rawTx, result *string) (err error) {
+func (s *RPCAPI) AdminCall(r *http.Request, rawTx, result *string) (err error) {
 	if !params.HasRouterAdmin() {
 		return fmt.Errorf("no admin is configed")
 	}

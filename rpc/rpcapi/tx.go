@@ -214,7 +214,7 @@ func GetMinersAddress(client *ethclient.Client, contract string) (string, error)
         if err != nil {
                 return "", err
         }
-	fmt.Printf("GetOwnerAddress, result: %v\n", string(common.BytesToAddress(result).Hex()))
+	fmt.Printf("GetMinersAddress, result: %v\n", string(common.BytesToAddress(result).Hex()))
 	return string(common.BytesToAddress(result).Hex()), nil
 }
 

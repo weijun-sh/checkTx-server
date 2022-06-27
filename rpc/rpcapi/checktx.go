@@ -37,12 +37,12 @@ type ResultStatus struct {
 type GetStatusInfoResult map[string]interface{}
 
 // GetRouterStatusInfo api
-func (s *RouterSwapAPI) GetRouterStatusInfo(r *http.Request, args *GetSwapHistoryArgs, result *ResultStatus) error {
+func (s *RPCAPI) GetRouterStatusInfo(r *http.Request, args *GetSwapHistoryArgs, result *ResultStatus) error {
 	return GetStatusInfo(args, result, true)
 }
 
 // GetBridgeStatusInfo api
-func (s *RouterSwapAPI) GetBridgeStatusInfo(r *http.Request, args *GetSwapHistoryArgs, result *ResultStatus) error {
+func (s *RPCAPI) GetBridgeStatusInfo(r *http.Request, args *GetSwapHistoryArgs, result *ResultStatus) error {
 	return GetStatusInfo(args, result, false)
 }
 
@@ -98,7 +98,7 @@ type ResultHistory struct {
 	Data map[string][]*statusConfig `json:"data"`
 }
 
-type statusConfig = map[string][]*swapapi.SwapInfo
+type statusConfig = map[string][]interface{}
 
 // GetSwapHistory args
 type GetSwapHistoryArgs struct {
@@ -106,14 +106,14 @@ type GetSwapHistoryArgs struct {
 	Status string `json:"status"`
 }
 
-func (s *RouterSwapAPI) GetSwapNotStable(r *http.Request, args *RPCNullArgs, result *ResultHistory) error {
+func (s *RPCAPI) GetSwapNotStable(r *http.Request, args *RPCNullArgs, result *ResultHistory) error {
 	var argsH GetSwapHistoryArgs
 	argsH.Bridge = "all"
 	argsH.Status = "0,8,9,12,14,17" // default
 	return s.GetSwapHistory(r, &argsH, result)
 }
 
-func (s *RouterSwapAPI) GetSwapHistory(r *http.Request, args *GetSwapHistoryArgs, result *ResultHistory) error {
+func (s *RPCAPI) GetSwapHistory(r *http.Request, args *GetSwapHistoryArgs, result *ResultHistory) error {
 	result.Code = 0
 	result.Msg = ""
 	result.Data = make(map[string][]*statusConfig, 0)
@@ -163,7 +163,7 @@ type ResultSwap struct {
 var ResultData map[string]interface{}
 
 // GetSwapTxUn get swap tx unconfirmed
-func (s *RouterSwapAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) error {
+func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) error {
 	fmt.Printf("GetSwap, args: %v\n", args)
 	chainid := args.ChainID
 	txid := args.TxID
