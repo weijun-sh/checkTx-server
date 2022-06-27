@@ -258,17 +258,44 @@ func GetRouterSwap(dbname, fromChainID, txid, logindexStr string) (*SwapInfo, er
 
 // GetRouterSwapHistory impl
 func GetRouterSwapHistory(dbname, fromChainID, address string, offset, limit int, status string) ([]*SwapInfo, error) {
-	switch {
-	case limit == 0:
-		limit = 20 // default
-	case limit > 100:
-		limit = 100
-	case limit < -100:
-		limit = -100
-	}
+        limit = processHistoryLimit(limit)
 	result, err := mongodb.FindRouterSwapResults(dbname, fromChainID, address, offset, limit, status)
 	if err != nil {
 		return nil, err
 	}
 	return ConvertMgoSwapResultsToSwapInfos(result), nil
+}
+
+// bridge
+func processHistoryLimit(limit int) int {
+        switch {
+        case limit == 0:
+                limit = 20 // default
+        case limit > 100:
+                limit = 100
+        case limit < -100:
+                limit = -100
+        }
+        return limit
+}
+// GetSwapinHistory api
+func GetSwapinHistory(dbname, address, pairID string, offset, limit int, status string) ([]*BridgeSwapInfo, error) {
+        log.Debug("[api] receive GetSwapinHistory", "address", address, "pairID", pairID, "offset", offset, "limit", limit, "status", status)
+        limit = processHistoryLimit(limit)
+        result, err := mongodb.FindSwapinResults(dbname, address, pairID, offset, limit, status)
+        if err != nil {
+                return nil, err
+        }
+        return ConvertMgoBridgeSwapResultsToSwapInfos(result), nil
+}
+
+// GetSwapoutHistory api
+func GetSwapoutHistory(dbname, address, pairID string, offset, limit int, status string) ([]*BridgeSwapInfo, error) {
+        log.Debug("[api] receive GetSwapoutHistory", "address", address, "pairID", pairID, "offset", offset, "limit", limit)
+        limit = processHistoryLimit(limit)
+        result, err := mongodb.FindSwapoutResults(dbname, address, pairID, offset, limit, status)
+        if err != nil {
+                return nil, err
+        }
+        return ConvertMgoBridgeSwapResultsToSwapInfos(result), nil
 }

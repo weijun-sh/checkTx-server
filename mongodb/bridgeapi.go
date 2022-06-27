@@ -17,10 +17,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-//const (
-//	allPairs     = "all"
+const (
+	allPairs     = "all"
 //	allAddresses = "all"
-//)
+)
 
 //var (
 //	retryLock               sync.Mutex
@@ -286,11 +286,14 @@ func findSwapsOrSwapResultsWithPairIDAndStatus(result interface{}, pairID string
 //	return findSwapResultsWithStatus(collSwapinResult, status, septime)
 //}
 //
-//// FindSwapinResults find swapin history results
-//func FindSwapinResults(address, pairID string, offset, limit int, status string) ([]*MgoSwapResult, error) {
-//	return findSwapResults(collSwapinResult, address, pairID, offset, limit, status)
-//}
-//
+// FindSwapinResults find swapin history results
+func FindSwapinResults(dbname, address, pairID string, offset, limit int, status string) ([]*MgoBridgeSwapResult, error) {
+	tablename := tbSwapinResults
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
+	return findBridgeSwapResults(c, address, pairID, offset, limit, status)
+}
+
 //// FindSwapResultsToReplace find swap results to replace
 //func FindSwapResultsToReplace(status SwapStatus, septime int64, isSwapin bool) ([]*MgoSwapResult, error) {
 //	qtime := bson.M{"inittime": bson.M{"$gte": septime}}
@@ -344,11 +347,14 @@ func findSwapsOrSwapResultsWithPairIDAndStatus(result interface{}, pairID string
 //	return findSwapResultsWithStatus(collSwapoutResult, status, septime)
 //}
 //
-//// FindSwapoutResults find swapout history results
-//func FindSwapoutResults(address, pairID string, offset, limit int, status string) ([]*MgoSwapResult, error) {
-//	return findSwapResults(collSwapoutResult, address, pairID, offset, limit, status)
-//}
-//
+// FindSwapoutResults find swapout history results
+func FindSwapoutResults(dbname, address, pairID string, offset, limit int, status string) ([]*MgoBridgeSwapResult, error) {
+	tablename := tbSwapoutResults
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
+	return findBridgeSwapResults(c, address, pairID, offset, limit, status)
+}
+
 //// ------------------ swapin / swapout result common ------------------------
 //
 //func addSwapResult(collection *mongo.Collection, ms *MgoSwapResult) error {
@@ -556,56 +562,56 @@ func getBridgeStatusesFromStr(status string) []SwapStatus {
 	return result
 }
 
-//func findSwapResults(collection *mongo.Collection, address, pairID string, offset, limit int, status string) ([]*MgoSwapResult, error) {
-//	var queries []bson.M
-//
-//	if pairID != "" && pairID != allPairs {
-//		qpair := bson.M{"pairid": strings.ToLower(pairID)}
-//		queries = append(queries, qpair)
-//	}
-//
-//	if address != "" && address != allAddresses {
-//		qaddress := bson.M{"from": bson.M{"$regex": primitive.Regex{Pattern: address, Options: "i"}}}
-//		queries = append(queries, qaddress)
-//	}
-//
-//	filterStatuses := getStatusesFromStr(status)
-//	if len(filterStatuses) > 0 {
-//		if len(filterStatuses) == 1 {
-//			queries = append(queries, bson.M{"status": filterStatuses[0]})
-//		} else {
-//			qstatus := bson.M{"status": bson.M{"$in": filterStatuses}}
-//			queries = append(queries, qstatus)
-//		}
-//	}
-//
-//	opts := &options.FindOptions{}
-//	if limit >= 0 {
-//		opts = opts.SetSort(bson.D{{Key: "inittime", Value: 1}}).
-//			SetSkip(int64(offset)).SetLimit(int64(limit))
-//	} else {
-//		opts = opts.SetSort(bson.D{{Key: "inittime", Value: -1}}).
-//			SetSkip(int64(offset)).SetLimit(int64(-limit))
-//	}
-//
-//	var cur *mongo.Cursor
-//	var err error
-//	switch len(queries) {
-//	case 0:
-//		cur, err = collection.Find(clientCtx, bson.M{}, opts)
-//	case 1:
-//		cur, err = collection.Find(clientCtx, queries[0], opts)
-//	default:
-//		cur, err = collection.Find(clientCtx, bson.M{"$and": queries}, opts)
-//	}
-//	if err != nil {
-//		return nil, mgoError(err)
-//	}
-//	result := make([]*MgoSwapResult, 0, 20)
-//	err = cur.All(clientCtx, &result)
-//	return result, mgoError(err)
-//}
-//
+func findBridgeSwapResults(collection *mongo.Collection, address, pairID string, offset, limit int, status string) ([]*MgoBridgeSwapResult, error) {
+	var queries []bson.M
+
+	if pairID != "" && pairID != allPairs {
+		qpair := bson.M{"pairid": strings.ToLower(pairID)}
+		queries = append(queries, qpair)
+	}
+
+	if address != "" && address != allAddresses {
+		qaddress := bson.M{"from": bson.M{"$regex": primitive.Regex{Pattern: address, Options: "i"}}}
+		queries = append(queries, qaddress)
+	}
+
+	filterStatuses := getBridgeStatusesFromStr(status)
+	if len(filterStatuses) > 0 {
+		if len(filterStatuses) == 1 {
+			queries = append(queries, bson.M{"status": filterStatuses[0]})
+		} else {
+			qstatus := bson.M{"status": bson.M{"$in": filterStatuses}}
+			queries = append(queries, qstatus)
+		}
+	}
+
+	opts := &options.FindOptions{}
+	if limit >= 0 {
+		opts = opts.SetSort(bson.D{{Key: "inittime", Value: 1}}).
+			SetSkip(int64(offset)).SetLimit(int64(limit))
+	} else {
+		opts = opts.SetSort(bson.D{{Key: "inittime", Value: -1}}).
+			SetSkip(int64(offset)).SetLimit(int64(-limit))
+	}
+
+	var cur *mongo.Cursor
+	var err error
+	switch len(queries) {
+	case 0:
+		cur, err = collection.Find(clientCtx, bson.M{}, opts)
+	case 1:
+		cur, err = collection.Find(clientCtx, queries[0], opts)
+	default:
+		cur, err = collection.Find(clientCtx, bson.M{"$and": queries}, opts)
+	}
+	if err != nil {
+		return nil, mgoError(err)
+	}
+	result := make([]*MgoBridgeSwapResult, 0, 20)
+	err = cur.All(clientCtx, &result)
+	return result, mgoError(err)
+}
+
 //// ------------------ p2sh address ------------------------
 //
 //// AddP2shAddress add p2sh address

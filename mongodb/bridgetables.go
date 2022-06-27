@@ -19,7 +19,7 @@ type MgoBridgeSwap struct {
 	Memo      string     `bson:"memo"`
 }
 
-// MgoSwapResult swap result (verified swap)
+// MgoBridgeSwapResult swap result (verified swap)
 type MgoBridgeSwapResult struct {
 	Key         string     `bson:"_id"` // txid + pairid + bind
 	PairID      string     `bson:"pairid"`

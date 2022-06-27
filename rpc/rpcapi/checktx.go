@@ -95,7 +95,7 @@ func getBridgeStatusInfo(dbname, status string, result *ResultStatus) {
 type ResultHistory struct {
 	Code uint64 `json:"code"`
 	Msg string `json:"msg"`
-	Data map[string][]*statusConfig `json:"data"`
+	Data map[string]*statusConfig `json:"data"`
 }
 
 type statusConfig = map[string][]interface{}
@@ -116,7 +116,7 @@ func (s *RPCAPI) GetSwapNotStable(r *http.Request, args *RPCNullArgs, result *Re
 func (s *RPCAPI) GetSwapHistory(r *http.Request, args *GetSwapHistoryArgs, result *ResultHistory) error {
 	result.Code = 0
 	result.Msg = ""
-	result.Data = make(map[string][]*statusConfig, 0)
+	result.Data = make(map[string]*statusConfig, 0)
 	dbname := args.Bridge
 	status := args.Status
 	if status == "" {
@@ -136,22 +136,21 @@ func (s *RPCAPI) GetSwapHistory(r *http.Request, args *GetSwapHistoryArgs, resul
 func getSwapHistory(dbname, statuses string, result *ResultHistory) {
 	fmt.Printf("\nfind dbname: %v\n", dbname)
 	parts := strings.Split(statuses, ",")
+	var s statusConfig = make(statusConfig, 0)
 	for _, status := range parts {
 		if status == "10" {
 			continue
 		}
 		si, errs := swapapi.GetRouterSwapHistory(dbname, "", "", 0, 20, status)
 		if errs == nil && len(si) != 0 {
-			var s statusConfig
-			s = make(statusConfig, 0)
 			for _, st := range si {
 				s[status] = append(s[status], st)
 				spew.Printf("%v\n", st)
 			}
-			result.Data[dbname] = append(result.Data[dbname], &s)
 			//return nil
 		}
 	}
+	result.Data[dbname] = &s
 }
 
 type ResultSwap struct {
@@ -270,5 +269,85 @@ func isBridgeSwapin(topic int) bool {
 }
 func isBridgeSwapout(topic int) bool {
 	return topic == swapoutTopic
+}
+
+// bridge
+// RPCQueryHistoryArgs args
+type RPCQueryHistoryArgs struct {
+	Bridge  string `json:"bridge"`
+        Address string `json:"address"`
+        PairID  string `json:"pairid"`
+        Offset  int    `json:"offset"`
+        Limit   int    `json:"limit"`
+        Status  string `json:"status"`
+}
+
+// GetSwapinHistory api
+func (s *RPCAPI) GetSwapinHistory(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistory) error {
+	result.Code = 0
+	result.Msg = ""
+	result.Data = make(map[string]*statusConfig, 0)
+	dbname := args.Bridge
+	status := args.Status
+	if status == "" {
+		status = "0,8,9,12,14,17" // default
+	}
+	fmt.Printf("dbname: %v, status: %v\n", dbname, status)
+	if dbname == "all" {
+		for _, dbname := range bridgeArray_1 {
+			getBridgeSwapHistory(dbname, status, result, true)
+		}
+	} else {
+		getBridgeSwapHistory(dbname, status, result, true)
+	}
+	return nil
+}
+
+func getBridgeSwapHistory(dbname, statuses string, result *ResultHistory, isSwapin bool) error {
+	fmt.Printf("\nfind dbname: %v\n", dbname)
+	parts := strings.Split(statuses, ",")
+	var s statusConfig = make(statusConfig, 0)
+	for _, status := range parts {
+		if status == "10" {
+			continue
+		}
+		var si []*swapapi.BridgeSwapInfo
+		var errs error
+		if isSwapin {
+			si, errs = swapapi.GetSwapinHistory(dbname, "", "", 0, 20, status)
+		} else {
+			si, errs = swapapi.GetSwapoutHistory(dbname, "", "", 0, 20, status)
+		}
+		if errs == nil && len(si) != 0 {
+			for _, st := range si {
+				s[status] = append(s[status], st)
+				spew.Printf("%v\n", st)
+			}
+			//return nil
+		}
+	}
+	result.Data[dbname] = &s
+        return nil
+}
+
+// GetSwapoutHistory api
+func (s *RPCAPI) GetSwapoutHistory(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistory) error {
+	result.Code = 0
+	result.Msg = ""
+	result.Data = make(map[string]*statusConfig, 0)
+	dbname := args.Bridge
+	status := args.Status
+	if status == "" {
+		status = "0,8,9,12,14,17" // default
+	}
+	fmt.Printf("dbname: %v, status: %v\n", dbname, status)
+	if dbname == "all" {
+		for _, dbname := range bridgeArray_1 {
+			getBridgeSwapHistory(dbname, status, result, false)
+		}
+	} else {
+		getBridgeSwapHistory(dbname, status, result, false)
+	}
+	return nil
 }
 
