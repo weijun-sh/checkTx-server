@@ -36,17 +36,27 @@ type ResultStatus struct {
 
 type GetStatusInfoResult map[string]interface{}
 
+// RPCQueryHistoryArgs args
+type RPCQueryHistoryArgs struct {
+	Bridge  string `json:"bridge"`
+        Address string `json:"address"`
+        PairID  string `json:"pairid"`
+        Offset  int    `json:"offset"`
+        Limit   int    `json:"limit"`
+        Status  string `json:"status"`
+}
+
 // GetRouterStatusInfo api
-func (s *RPCAPI) GetRouterStatusInfo(r *http.Request, args *GetSwapHistoryArgs, result *ResultStatus) error {
+func (s *RPCAPI) GetRouterStatusInfo(r *http.Request, args *RPCQueryHistoryArgs, result *ResultStatus) error {
 	return GetStatusInfo(args, result, true)
 }
 
 // GetBridgeStatusInfo api
-func (s *RPCAPI) GetBridgeStatusInfo(r *http.Request, args *GetSwapHistoryArgs, result *ResultStatus) error {
+func (s *RPCAPI) GetBridgeStatusInfo(r *http.Request, args *RPCQueryHistoryArgs, result *ResultStatus) error {
 	return GetStatusInfo(args, result, false)
 }
 
-func GetStatusInfo(args *GetSwapHistoryArgs, result *ResultStatus, isrouter bool) error {
+func GetStatusInfo(args *RPCQueryHistoryArgs, result *ResultStatus, isrouter bool) error {
 	result.Code = 0
 	result.Msg = ""
 	result.Data = make(map[string]*GetStatusInfoResult, 0)
@@ -98,22 +108,16 @@ type ResultHistory struct {
 	Data map[string]*statusConfig `json:"data"`
 }
 
-type statusConfig = map[string][]interface{}
-
-// GetSwapHistory args
-type GetSwapHistoryArgs struct {
-	Bridge string `json:"bridge"`
-	Status string `json:"status"`
-}
+type statusConfig = []interface{}
 
 func (s *RPCAPI) GetSwapNotStable(r *http.Request, args *RPCNullArgs, result *ResultHistory) error {
-	var argsH GetSwapHistoryArgs
+	var argsH RPCQueryHistoryArgs
 	argsH.Bridge = "all"
 	argsH.Status = "0,8,9,12,14,17" // default
 	return s.GetSwapHistory(r, &argsH, result)
 }
 
-func (s *RPCAPI) GetSwapHistory(r *http.Request, args *GetSwapHistoryArgs, result *ResultHistory) error {
+func (s *RPCAPI) GetSwapHistory(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistory) error {
 	result.Code = 0
 	result.Msg = ""
 	result.Data = make(map[string]*statusConfig, 0)
@@ -137,6 +141,7 @@ func getSwapHistory(dbname, statuses string, result *ResultHistory) {
 	fmt.Printf("\nfind dbname: %v\n", dbname)
 	parts := strings.Split(statuses, ",")
 	var s statusConfig = make(statusConfig, 0)
+	var getH bool
 	for _, status := range parts {
 		if status == "10" {
 			continue
@@ -144,13 +149,16 @@ func getSwapHistory(dbname, statuses string, result *ResultHistory) {
 		si, errs := swapapi.GetRouterSwapHistory(dbname, "", "", 0, 20, status)
 		if errs == nil && len(si) != 0 {
 			for _, st := range si {
-				s[status] = append(s[status], st)
+				s = append(s, st)
+				getH = true
 				spew.Printf("%v\n", st)
 			}
 			//return nil
 		}
 	}
-	result.Data[dbname] = &s
+	if getH {
+		result.Data[dbname] = &s
+	}
 }
 
 type ResultSwap struct {
@@ -272,16 +280,6 @@ func isBridgeSwapout(topic int) bool {
 }
 
 // bridge
-// RPCQueryHistoryArgs args
-type RPCQueryHistoryArgs struct {
-	Bridge  string `json:"bridge"`
-        Address string `json:"address"`
-        PairID  string `json:"pairid"`
-        Offset  int    `json:"offset"`
-        Limit   int    `json:"limit"`
-        Status  string `json:"status"`
-}
-
 // GetSwapinHistory api
 func (s *RPCAPI) GetSwapinHistory(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistory) error {
 	result.Code = 0
@@ -307,6 +305,7 @@ func getBridgeSwapHistory(dbname, statuses string, result *ResultHistory, isSwap
 	fmt.Printf("\nfind dbname: %v\n", dbname)
 	parts := strings.Split(statuses, ",")
 	var s statusConfig = make(statusConfig, 0)
+	var getH bool
 	for _, status := range parts {
 		if status == "10" {
 			continue
@@ -320,13 +319,16 @@ func getBridgeSwapHistory(dbname, statuses string, result *ResultHistory, isSwap
 		}
 		if errs == nil && len(si) != 0 {
 			for _, st := range si {
-				s[status] = append(s[status], st)
+				s = append(s, st)
+				getH = true
 				spew.Printf("%v\n", st)
 			}
 			//return nil
 		}
 	}
-	result.Data[dbname] = &s
+	if getH {
+		result.Data[dbname] = &s
+	}
         return nil
 }
 
