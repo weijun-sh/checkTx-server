@@ -119,8 +119,7 @@ func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) []interface{}
 				break
 			}
 			find := strings.Contains(string(line), txhash)
-			findStatus := strings.Contains(string(line), "status")
-			if find && findStatus {
+			if find {
 				retStr, err := getLogsParse(string(line))
 				if err == nil {
 					find = true
@@ -154,7 +153,7 @@ func getLogsParse(logRet string) (interface{}, error) {
 
 type bridgeTxhashStatus struct {
 	Status interface{} `json:"status"`
-	Txhash interface{} `json:"txid,swaptxid"`
+	Txhash interface{} `json:"txid"`
 	Bind interface{} `json:"bind"`
 	IsSwapin interface{} `json:"isSwapin"`
 	Level interface{} `json:"level"`
