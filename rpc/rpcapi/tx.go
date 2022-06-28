@@ -12,8 +12,8 @@ import (
 	"github.com/weijun-sh/checkTx-server/log"
 	rpcclient "github.com/weijun-sh/checkTx-server/rpc/client"
 	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/router"
 	"github.com/weijun-sh/checkTx-server/tokens"
-	"github.com/weijun-sh/checkTx-server/tokens/eth/abicoder"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -103,12 +103,6 @@ func getTransactionReceiptTo(client *ethclient.Client, txHash common.Hash) (stri
 		time.Sleep(1 * time.Second)
 	}
 	return "", 0, errors.New("get receipt failed")
-}
-
-func getContractMinter(client *ethclient.Client, contract string) *string {
-	//test := "0x668b9734ffe9ee8a01d4ade3362de71e8989ea87"
-	test := "0x13b432914a996b0a48695df9b2d701eda45ff264"
-	return &test
 }
 
 func isContractAddress(gateway *[]string, address string) (bool, error) {
@@ -219,20 +213,22 @@ func GetMinersAddress(client *ethclient.Client, contract string) (string, error)
 }
 
 func GetRouterAddress(client *ethclient.Client, chainid, to string) (string, error) {
-	for _, router := range params.Router {
-		for _, r := range router {
-			address, err := getRouterAddress(client, r, chainid)
-			if err == nil && strings.EqualFold(address, to) {
-				return r, nil
-			}
-			//fmt.Printf("router: %v\n", router)
+	for n, r := range params.Router1 {
+		var isnevm bool
+		if strings.ToLower(n) == "nevm" {
+			isnevm = true
+		}
+		address, err := getRouterAddress(client, *r, chainid, isnevm)
+		fmt.Printf("router: %v, address: %v, to: %v, i: %v\n", r, address, to, n)
+		if err == nil && strings.EqualFold(address, to) {
+			return *r, nil
 		}
 	}
 	return "",nil
 }
 
 // getRouterAddress call "getChainConfig(uint256)"
-func getRouterAddress(client *ethclient.Client, contract string, chainid string) (string, error) {
+func getRouterAddress(client *ethclient.Client, contract string, chainid string, isNevm bool) (string, error) {
 	//fmt.Printf("GetRouterAddress\n")
 	data := make(hexutil.Bytes, 36)
 	copy(data[:4], common.FromHex("0x19ed16dc"))
@@ -250,13 +246,20 @@ func getRouterAddress(client *ethclient.Client, contract string, chainid string)
                 return "", err
         }
 	//fmt.Printf("getRouterAddress, result: %v\n", result)
-	return getChainConfigAddress(result)
+	return getChainConfigAddress(result, isNevm)
 }
 
-func getChainConfigAddress(data []byte) (string, error) {
-        if uint64(len(data)) < 224 {
-                return "", abicoder.ErrParseDataError
+func getChainConfigAddress(data []byte, isNevm bool) (string, error) {
+	var config *tokens.ChainConfig
+	var err error
+	if isNevm {
+		config, err = router.ParseChainConfigNevm(data)
+	} else {
+		config, err = router.ParseChainConfig(data)
+	}
+        if err != nil {
+                return "", err
         }
-	return string(common.BytesToAddress(data[64:96]).Hex()), nil
+	return config.RouterContract, nil
 }
 

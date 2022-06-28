@@ -29,7 +29,8 @@ var (
 
 	EthClient map[string]*ethclient.Client = make(map[string]*ethclient.Client, 0)
 	EthRpc map[string]*[]string = make(map[string]*[]string, 0)
-	Router map[string][]string   = make(map[string][]string, 0)
+	Router0 map[string]*string = make(map[string]*string, 0)
+	Router1 map[string]*string = make(map[string]*string, 0)
 	Bridge map[string]*string   = make(map[string]*string, 0)
 
 	routerConfigFile string
@@ -125,7 +126,8 @@ type RouterConfig struct {
 	Rsyslog     rsyslogConfig
 	Gateways    map[string][]string // key is chain ID
 	GatewaysExt map[string][]string `toml:",omitempty" json:",omitempty"` // key is chain ID
-	Routers     map[string][]string // key is 0,1
+	Routers0    map[string]*string
+	Routers1    map[string]*string // key is 1 or nevm
 	Bridges     map[string]*string // key is chain ID
 	MPC         *MPCConfig
 	Extra       *ExtraConfig `toml:",omitempty" json:",omitempty"`
@@ -998,7 +1000,8 @@ func LoadRouterConfig(configFile string, isServer, check bool) *RouterConfig {
 
 	setRsyslogDir(config.Rsyslog.Dir)
 	initClient(config.Gateways)
-	initRouter(config.Routers)
+	initRouter0(config.Routers0)
+	initRouter1(config.Routers1)
 	initBridge(config.Bridges)
 	routerConfigFile = configFile
 	return routerConfig
@@ -1059,9 +1062,15 @@ func initBridge(bridges map[string]*string) {
 	}
 }
 
-func initRouter(routers map[string][]string) {
+func initRouter0(routers map[string]*string) {
 	for server, router := range routers {
-		Router[strings.ToLower(server)] = router
+		Router0[strings.ToLower(server)] = router
+	}
+}
+
+func initRouter1(routers map[string]*string) {
+	for server, router := range routers {
+		Router1[strings.ToLower(server)] = router
 	}
 }
 

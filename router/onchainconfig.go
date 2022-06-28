@@ -141,6 +141,10 @@ func SubscribeRouterConfig(topics []ethcommon.Hash) {
 	log.Info("subscribe 'UpdateConfig' event finished", "subscribes", len(subscribes))
 }
 
+func ParseChainConfig(data []byte) (config *tokens.ChainConfig, err error) {
+	return parseChainConfig(data)
+}
+
 func parseChainConfig(data []byte) (config *tokens.ChainConfig, err error) {
 	offset, overflow := common.GetUint64(data, 0, 32)
 	if overflow {
@@ -159,6 +163,43 @@ func parseChainConfig(data []byte) (config *tokens.ChainConfig, err error) {
 	config.Confirmations = common.GetBigInt(data, 64, 32).Uint64()
 	config.InitialHeight = common.GetBigInt(data, 96, 32).Uint64()
 	return config, nil
+}
+
+func ParseChainConfigNevm(data []byte) (config *tokens.ChainConfig, err error) {
+	return parseChainConfigNevm(data)
+}
+
+func parseChainConfigNevm(data []byte) (config *tokens.ChainConfig, err error) {
+        offset, overflow := common.GetUint64(data, 0, 32)
+        if overflow {
+                return nil, abicoder.ErrParseDataError
+        }
+        if uint64(len(data)) < offset+224 {
+                return nil, abicoder.ErrParseDataError
+        }
+        data = data[offset:]
+        blockChain, err := abicoder.ParseStringInData(data, 0)
+        if err != nil {
+                return nil, abicoder.ErrParseDataError
+        }
+        routerContract, err := abicoder.ParseStringInData(data, 32)
+        if err != nil {
+                return nil, abicoder.ErrParseDataError
+        }
+        confirmations := common.GetBigInt(data, 64, 32).Uint64()
+        initialHeight := common.GetBigInt(data, 96, 32).Uint64()
+        //extra, err := abicoder.ParseStringInData(data, 128)
+        //if err != nil {
+        //        return nil, abicoder.ErrParseDataError
+        //}
+        config = &tokens.ChainConfig{
+                BlockChain:     blockChain,
+                RouterContract: routerContract,
+                Confirmations:  confirmations,
+                InitialHeight:  initialHeight,
+                //Extra:          extra,
+        }
+        return config, nil
 }
 
 // GetChainConfig abi

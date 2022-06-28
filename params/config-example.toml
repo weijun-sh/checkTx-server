@@ -23,6 +23,10 @@ Dir = "/opt/rsyslog/dcrm-node1"
 [Gateways]
 1     = ["https://nodes.mewapi.io/rpc/eth", ""]
 
+[Routers0]
+
+[Routers1]
+
 [Bridges]
 # address = bridge/dbname
 
