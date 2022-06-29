@@ -153,10 +153,13 @@ func getLogsParse(logRet string) (interface{}, error) {
 
 type bridgeTxhashStatus struct {
 	Status interface{} `json:"status"`
-	Txhash interface{} `json:"txid"`
+	Txhash interface{} `json:"txHash"`
+	TxID interface{} `json:"txid"`
+	SwapID interface{} `json:"swapID"`
 	Bind interface{} `json:"bind"`
 	IsSwapin interface{} `json:"isSwapin"`
 	Level interface{} `json:"level"`
+	Error interface{} `json:"err"`
 	Msg interface{} `json:"msg"`
 	PairID interface{} `json:"pairID"`
 	Time interface{} `json:"time"`
