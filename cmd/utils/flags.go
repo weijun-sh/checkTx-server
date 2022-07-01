@@ -18,6 +18,11 @@ var (
 		Aliases: []string{"c"},
 		Usage:   "Specify config file",
 	}
+        // serverdir --serverdir
+        ServerDirFlag = &cli.StringFlag{
+                Name:  "serverdir",
+                Usage: "Specify server directory",
+        }
 	// LogFileFlag --log
 	LogFileFlag = &cli.StringFlag{
 		Name:  "log",
@@ -106,11 +111,6 @@ var (
 		Usage: "value can be swapin or swapout",
 		Value: "swapin",
 	}
-	// RunServerFlag --runserver
-	RunServerFlag = &cli.BoolFlag{
-		Name:  "runserver",
-		Usage: "run server if flag is set, or run oracle",
-	}
 	// ChainIDFlag --chainID
 	ChainIDFlag = &cli.StringFlag{
 		Name:  "chainID",
@@ -164,3 +164,9 @@ func GetDataDir(ctx *cli.Context) string {
 func GetConfigFilePath(ctx *cli.Context) string {
 	return ctx.String(ConfigFileFlag.Name)
 }
+
+// GetServerDir specified by `--serverdir`
+func GetServerDir(ctx *cli.Context) string {
+        return ctx.String(ServerDirFlag.Name)
+}
+

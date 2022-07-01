@@ -963,23 +963,17 @@ func GetDynamicFeeTxConfig(chainID string) *DynamicFeeTxConfig {
 }
 
 // LoadRouterConfig load router swap config
-func LoadRouterConfig(configFile string, isServer, check bool) *RouterConfig {
+func LoadRouterConfig(configFile string, check bool) *RouterConfig {
 	if configFile == "" {
 		log.Fatal("must specify config file")
 	}
-	log.Info("load router config file", "configFile", configFile, "isServer", isServer)
+	log.Info("load router config file", "configFile", configFile)
 	if !common.FileExist(configFile) {
 		log.Fatalf("LoadRouterConfig error: config file '%v' not exist", configFile)
 	}
 	config := &RouterConfig{}
 	if _, err := toml.DecodeFile(configFile, &config); err != nil {
 		log.Fatalf("LoadRouterConfig error (toml DecodeFile): %v", err)
-	}
-
-	if !isServer {
-		config.Server = nil
-	} else {
-		config.Oracle = nil
 	}
 
 	routerConfig = config
@@ -993,7 +987,7 @@ func LoadRouterConfig(configFile string, isServer, check bool) *RouterConfig {
 	log.Println("LoadRouterConfig finished.", string(bs))
 
 	if check {
-		if err := config.CheckConfig(isServer); err != nil {
+		if err := config.CheckConfig(); err != nil {
 			//log.Fatalf("Check config failed. %v", err)
 		}
 	}
@@ -1010,9 +1004,8 @@ func LoadRouterConfig(configFile string, isServer, check bool) *RouterConfig {
 // ReloadRouterConfig reload config
 func ReloadRouterConfig() {
 	configFile := routerConfigFile
-	isServer := IsSwapServer
 
-	log.Info("reload router config file", "configFile", configFile, "isServer", isServer)
+	log.Info("reload router config file", "configFile", configFile)
 
 	config := &RouterConfig{}
 	if _, err := toml.DecodeFile(configFile, &config); err != nil {
@@ -1020,13 +1013,7 @@ func ReloadRouterConfig() {
 		return
 	}
 
-	if !isServer {
-		config.Server = nil
-	} else {
-		config.Oracle = nil
-	}
-
-	if err := config.CheckConfig(isServer); err != nil {
+	if err := config.CheckConfig(); err != nil {
 		log.Errorf("ReloadRouterConfig check config failed. %v", err)
 		return
 	}

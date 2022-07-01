@@ -34,14 +34,14 @@ func CallContractWithGateway(gateway, contract string, data hexutil.Bytes, block
 }
 
 // CheckConfig check router config
-func (config *RouterConfig) CheckConfig(isServer bool) (err error) {
+func (config *RouterConfig) CheckConfig() (err error) {
 	if !strings.HasPrefix(config.Identifier, RouterSwapPrefixID) || config.Identifier == RouterSwapPrefixID {
 		return fmt.Errorf("wrong identifier '%v', missing prefix '%v'", config.Identifier, RouterSwapPrefixID)
 	}
 	if config.SwapType == "" {
 		return errors.New("empty router swap type")
 	}
-	log.Info("check identifier pass", "identifier", config.Identifier, "swaptype", config.SwapType, "isServer", isServer)
+	log.Info("check identifier pass", "identifier", config.Identifier, "swaptype", config.SwapType)
 
 	// check and init extra firstly
 	if config.Extra != nil {
@@ -51,27 +51,7 @@ func (config *RouterConfig) CheckConfig(isServer bool) (err error) {
 		}
 	}
 
-	if isServer {
-		err = config.Server.CheckConfig()
-	} else {
-		err = config.Oracle.CheckConfig()
-	}
-	if err != nil {
-		return err
-	}
-
-	if config.MPC == nil {
-		return errors.New("server must config 'MPC'")
-	}
-	err = config.MPC.CheckConfig(isServer)
-	if err != nil {
-		return err
-	}
-
-	if config.Onchain == nil {
-		return errors.New("server must config 'Onchain'")
-	}
-	err = config.Onchain.CheckConfig()
+	err = config.Server.CheckConfig()
 	if err != nil {
 		return err
 	}

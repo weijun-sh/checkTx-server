@@ -12,7 +12,7 @@ import (
 	"github.com/weijun-sh/checkTx-server/params"
 	rpcserver "github.com/weijun-sh/checkTx-server/rpc/server"
 	//"github.com/weijun-sh/checkTx-server/tokens"
-	"github.com/weijun-sh/checkTx-server/worker"
+	//"github.com/weijun-sh/checkTx-server/worker"
 	"github.com/urfave/cli/v2"
 )
 
@@ -40,7 +40,6 @@ func initApp() {
 	app.Flags = []cli.Flag{
 		utils.DataDirFlag,
 		utils.ConfigFileFlag,
-		utils.RunServerFlag,
 		utils.LogFileFlag,
 		utils.LogRotationFlag,
 		utils.LogMaxAgeFlag,
@@ -63,30 +62,22 @@ func checktx(ctx *cli.Context) error {
 	if ctx.NArg() > 0 {
 		return fmt.Errorf("invalid command: %q", ctx.Args().Get(0))
 	}
-	isServer := ctx.Bool(utils.RunServerFlag.Name)
 
-	params.SetDataDir(utils.GetDataDir(ctx), isServer)
+	//params.SetDataDir(utils.GetDataDir(ctx), isServer)
 	configFile := utils.GetConfigFilePath(ctx)
-	config := params.LoadRouterConfig(configFile, isServer, true)
+	config := params.LoadRouterConfig(configFile, true)
 
-	//tokens.InitRouterSwapType(config.SwapType)
-
-	if isServer {
-		//appName := params.GetIdentifier()
-		dbConfig := config.Server.MongoDB
-		mongodb.MongoServerInit(
-			clientIdentifier,
-			dbConfig.DBURLs,
-			dbConfig.DBName,
-			dbConfig.UserName,
-			dbConfig.Password,
-		)
-		//worker.StartRouterSwapWork(true)
-		time.Sleep(100 * time.Millisecond)
-		rpcserver.StartAPIServer()
-	} else {
-		worker.StartRouterSwapWork(false)
-	}
+	dbConfig := config.Server.MongoDB
+	mongodb.MongoServerInit(
+		clientIdentifier,
+		dbConfig.DBURLs,
+		dbConfig.DBName,
+		dbConfig.UserName,
+		dbConfig.Password,
+	)
+	//worker.StartRouterSwapWork(true)
+	time.Sleep(100 * time.Millisecond)
+	rpcserver.StartAPIServer()
 
 	utils.TopWaitGroup.Wait()
 	return nil
