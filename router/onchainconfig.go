@@ -141,7 +141,30 @@ func SubscribeRouterConfig(topics []ethcommon.Hash) {
 	log.Info("subscribe 'UpdateConfig' event finished", "subscribes", len(subscribes))
 }
 
-func ParseChainConfig(data []byte) (config *tokens.ChainConfig, err error) {
+func ParseMinterConfig(data []byte) (*tokens.MinterConfig, error) {
+	return parseMinterConfig(data)
+}
+
+func parseMinterConfig(data []byte) (*tokens.MinterConfig, error) {
+	offset, overflow := common.GetUint64(data, 0, 32)
+	if overflow {
+		return nil, abicoder.ErrParseDataError
+	}
+	if uint64(len(data)) < offset+160 {
+		return nil, abicoder.ErrParseDataError
+	}
+	data = data[32:]
+	config := &tokens.MinterConfig{}
+	config.Count = common.GetBigInt(data, 0, 32).Uint64()
+	var i uint64
+	for i = 0; i < config.Count; i++ {
+		minter := common.BytesToAddress(common.GetData(data, i * 32, i * 32 + 32)).LowerHex()
+		config.Minters = append(config.Minters, &minter)
+	}
+	return config, nil
+}
+
+func ParseChainConfig(data []byte) (*tokens.ChainConfig, error) {
 	return parseChainConfig(data)
 }
 

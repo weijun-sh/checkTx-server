@@ -213,6 +213,7 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 			result.Data["log"] = reslog
 		}
 	} else {
+		fmt.Printf("GetSwap, txHash: %v not found\n", txid)
 		result.Code = 1
 		result.Msg = "tx not found"
 		return errors.New("tx not found")
@@ -237,6 +238,7 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 }
 
 func getAddress4Contract(chainid, txid string) (*string, bool) {
+	fmt.Printf("getAddress4Contract, txHash: %v\n", txid)
 	var dbname *string
 	isbridge := true
 	to, topic, err := getTransactionReceiptTo(params.EthClient[chainid], common.HexToHash(txid))
@@ -246,14 +248,18 @@ func getAddress4Contract(chainid, txid string) (*string, bool) {
 		return nil, false
 	}
 	switch(topic) {
-	//case swapinTopic:
-	//	fmt.Printf("getTransactionReceiptTo, isBridgeSwapin\n")
-	//	dbname = params.Bridge[strings.ToLower(to)]
 	case swapoutTopic:
 		fmt.Printf("getTransactionReceiptTo, isBridgeSwapout\n")
 		minter, err := GetMinersAddress(params.EthClient[chainid], to)
+		fmt.Printf("getTransactionReceiptTo, isBridgeSwapout, miner: %v\n", minter)
 		if err == nil {
-			dbname = params.Bridge[strings.ToLower(minter)]
+			for _, m := range minter {
+				dn := params.Bridge[strings.ToLower(*m)]
+				if dn != nil {
+					dbname = dn
+					break
+				}
+			}
 		} else {
 			minter, err := GetOwnerAddress(params.EthClient[chainid], to)
 			if err == nil {
@@ -267,6 +273,9 @@ func getAddress4Contract(chainid, txid string) (*string, bool) {
 			dbname = params.Bridge[strings.ToLower(minter)]
 			isbridge = false
 		}
+	case swapinTopic:
+		fmt.Printf("getTransactionReceiptTo, isBridgeSwapin\n")
+		dbname = params.Bridge[strings.ToLower(to)]
 	}
 
 	return dbname, isbridge

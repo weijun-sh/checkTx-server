@@ -54,15 +54,17 @@ var (
 
 //txHash = common.HexToHash(hash)
 func getTransactionTo(client *ethclient.Client, txHash common.Hash) (string, error) {
+	fmt.Printf("getTransactionTo, txHash: %v\n", txHash)
 	if client == nil {
 		return "", errors.New("client is nil")
 	}
 	for i := 0; i< 3; i++ {
 		tx, _, err := client.TransactionByHash(context.Background(), txHash)
 		if err == nil {
+			fmt.Printf("getTransactionTo, return address: %v\n", tx.To().String())
 			return tx.To().String(), nil
 		}
-		//fmt.Printf("getTransactionTo, err: %v\n", err)
+		fmt.Printf("getTransactionTo, err: %v, i: %v\n", err, i)
 		time.Sleep(1 * time.Second)
 	}
 	return "", errors.New("get tx failed")
@@ -90,13 +92,13 @@ func getTransactionReceiptTo(client *ethclient.Client, txHash common.Hash) (stri
 					return log.Address.String(), swapoutTopic, nil
 				}
 			}
-			//for _, log := range receipt.Logs {
-			//	fmt.Printf("topic: %v\n", log.Topics[0])
-			//	logTopic := log.Topics[0].String()
-			//	if isSwapinTopic(logTopic) {
-			//		return string(common.BytesToAddress(log.Topics[2][:]).Hex()), swapinTopic, nil
-			//	}
-			//}
+			for _, log := range receipt.Logs {
+				fmt.Printf("topic: %v\n", log.Topics[0])
+				logTopic := log.Topics[0].String()
+				if isSwapinTopic(logTopic) {
+					return string(common.BytesToAddress(log.Topics[2][:]).Hex()), swapinTopic, nil
+				}
+			}
 			return "", 0, errors.New("get receipt topic mismatch")
 		}
 		//fmt.Printf("getTransactionReceiptTo, txHash: %v, err: %v\n", txHash, err)
@@ -195,7 +197,7 @@ func GetOwnerAddress(client *ethclient.Client, contract string) (string, error) 
 }
 
 // GetMintersAddress call "getAllMinters()"
-func GetMinersAddress(client *ethclient.Client, contract string) (string, error) {
+func GetMinersAddress(client *ethclient.Client, contract string) ([]*string, error) {
 	//fmt.Printf("GetMinersAddress\n")
         data := common.FromHex("0xa045442c")
 
@@ -206,10 +208,14 @@ func GetMinersAddress(client *ethclient.Client, contract string) (string, error)
         }
         result, err := client.CallContract(context.Background(), msg, nil)
         if err != nil {
-                return "", err
+                return nil, err
         }
-	fmt.Printf("GetMinersAddress, result: %v\n", string(common.BytesToAddress(result).Hex()))
-	return string(common.BytesToAddress(result).Hex()), nil
+	fmt.Printf("GetMinersAddress, result: %v\n", result)
+	minter, errm := router.ParseMinterConfig(result)
+        if errm != nil {
+                return nil, errm
+        }
+	return minter.Minters, nil
 }
 
 func GetRouterAddress(client *ethclient.Client, chainid, to string) (string, error) {

@@ -8,6 +8,12 @@ import (
 	"github.com/weijun-sh/checkTx-server/common"
 )
 
+// minter struct
+type MinterConfig struct {
+	Count   uint64
+	Minters []*string
+}
+
 // ChainConfig struct
 type ChainConfig struct {
 	ChainID        string
