@@ -8,11 +8,11 @@ import (
 
 	"github.com/weijun-sh/checkTx-server/cmd/utils"
 	"github.com/weijun-sh/checkTx-server/log"
-	"github.com/weijun-sh/checkTx-server/mongodb"
+	//"github.com/weijun-sh/checkTx-server/mongodb"
 	"github.com/weijun-sh/checkTx-server/params"
 	rpcserver "github.com/weijun-sh/checkTx-server/rpc/server"
 	//"github.com/weijun-sh/checkTx-server/tokens"
-	//"github.com/weijun-sh/checkTx-server/worker"
+	"github.com/weijun-sh/checkTx-server/worker"
 	"github.com/urfave/cli/v2"
 )
 
@@ -39,6 +39,7 @@ func initApp() {
 	}
 	app.Flags = []cli.Flag{
 		utils.DataDirFlag,
+		utils.ServerDbConfigDirFlag,
 		utils.ConfigFileFlag,
 		utils.LogFileFlag,
 		utils.LogRotationFlag,
@@ -65,17 +66,11 @@ func checktx(ctx *cli.Context) error {
 
 	//params.SetDataDir(utils.GetDataDir(ctx), isServer)
 	configFile := utils.GetConfigFilePath(ctx)
-	config := params.LoadRouterConfig(configFile, true)
+	params.LoadRouterConfig(configFile, true)
 
-	dbConfig := config.Server.MongoDB
-	mongodb.MongoServerInit(
-		clientIdentifier,
-		dbConfig.DBURLs,
-		dbConfig.DBName,
-		dbConfig.UserName,
-		dbConfig.Password,
-	)
-	//worker.StartRouterSwapWork(true)
+	params.SetServerDbConfigDir(utils.GetServerDbConfigDir(ctx))
+	worker.StartSwapWork()
+
 	time.Sleep(100 * time.Millisecond)
 	rpcserver.StartAPIServer()
 

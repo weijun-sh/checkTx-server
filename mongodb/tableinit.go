@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/params"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,6 +26,10 @@ var (
 )
 
 func initCollections() {
+	client, err := params.GetClientByDbName(databaseName)
+	if err != nil {
+		return
+	}
 	database := client.Database(databaseName)
 
 	collRouterSwap = database.Collection(tbRouterSwaps)

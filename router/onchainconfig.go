@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"math/big"
 	"sync/atomic"
 	"time"
@@ -146,16 +147,20 @@ func ParseMinterConfig(data []byte) (*tokens.MinterConfig, error) {
 }
 
 func parseMinterConfig(data []byte) (*tokens.MinterConfig, error) {
-	offset, overflow := common.GetUint64(data, 0, 32)
-	if overflow {
-		return nil, abicoder.ErrParseDataError
-	}
-	if uint64(len(data)) < offset+160 {
-		return nil, abicoder.ErrParseDataError
-	}
+	//offset, overflow := common.GetUint64(data, 0, 32)
+	//if overflow {
+	//	fmt.Printf("parseMinterConfig overflow\n")
+	//	return nil, abicoder.ErrParseDataError
+	//}
+	//if uint64(len(data)) < offset+160 {
+	//	fmt.Printf("parseMinterConfig 160\n")
+	//	return nil, abicoder.ErrParseDataError
+	//}
 	data = data[32:]
 	config := &tokens.MinterConfig{}
 	config.Count = common.GetBigInt(data, 0, 32).Uint64()
+	data = data[32:]
+	fmt.Printf("config.Count: %v, data: %v\n", config.Count, data)
 	var i uint64
 	for i = 0; i < config.Count; i++ {
 		minter := common.BytesToAddress(common.GetData(data, i * 32, i * 32 + 32)).LowerHex()

@@ -75,7 +75,7 @@ type retData struct {
 
 func getRsyslogFiles(dbname string, isbridge bool) []string {
 	var ret []string
-	dir := params.GetRsyslogDir()
+	dir := params.GetRsyslogDir(dbname)
 	if dir == "" {
 		return ret
 	}
@@ -83,6 +83,10 @@ func getRsyslogFiles(dbname string, isbridge bool) []string {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return ret
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
 	}
 	filename := fmt.Sprintf("%v%v", dbname, suffix)
 	for _, file := range files {

@@ -94,12 +94,6 @@ func (s *RouterServerConfig) CheckConfig() error {
 	if s.APIServer == nil {
 		return errors.New("server must config 'APIServer'")
 	}
-	if s.MongoDB == nil {
-		return errors.New("server must config 'MongoDB'")
-	}
-	if err := s.MongoDB.CheckConfig(); err != nil {
-		return err
-	}
 	initAutoSwapNonceEnabledChains()
 	for _, chainID := range s.ChainIDBlackList {
 		biChainID, ok := new(big.Int).SetString(chainID, 0)

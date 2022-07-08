@@ -9,7 +9,7 @@ import (
 
 	"github.com/weijun-sh/checkTx-server/common"
 	"github.com/weijun-sh/checkTx-server/log"
-	"github.com/weijun-sh/checkTx-server/mongodb"
+	//"github.com/weijun-sh/checkTx-server/mongodb"
 	"github.com/weijun-sh/checkTx-server/params"
 	"github.com/weijun-sh/checkTx-server/router"
 	"github.com/weijun-sh/checkTx-server/rpc/client"
@@ -172,13 +172,13 @@ func (b *Bridge) InitRouterInfo(routerContract string) (err error) {
 		"routerContract", routerContract, "routerMPC", routerMPC,
 		"routerFactory", routerFactory, "routerWNative", routerWNative)
 
-	if mongodb.HasClient() {
-		nextSwapNonce, err := mongodb.FindNextSwapNonce(chainID, strings.ToLower(routerMPC))
-		if err == nil {
-			log.Info("init next swap nonce from db", "chainID", chainID, "mpc", routerMPC, "nonce", nextSwapNonce)
-			b.InitSwapNonce(b, routerMPC, nextSwapNonce)
-		}
-	}
+	//if mongodb.HasClient() {
+	//	nextSwapNonce, err := mongodb.FindNextSwapNonce(chainID, strings.ToLower(routerMPC))
+	//	if err == nil {
+	//		log.Info("init next swap nonce from db", "chainID", chainID, "mpc", routerMPC, "nonce", nextSwapNonce)
+	//		b.InitSwapNonce(b, routerMPC, nextSwapNonce)
+	//	}
+	//}
 
 	return nil
 }

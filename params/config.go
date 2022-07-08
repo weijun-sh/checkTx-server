@@ -29,9 +29,6 @@ var (
 
 	EthClient map[string]*ethclient.Client = make(map[string]*ethclient.Client, 0)
 	EthRpc map[string]*[]string = make(map[string]*[]string, 0)
-	Router0 map[string]*string = make(map[string]*string, 0)
-	Router1 map[string]*string = make(map[string]*string, 0)
-	Bridge map[string]*string   = make(map[string]*string, 0)
 
 	routerConfigFile string
 	locDataDir       string
@@ -73,7 +70,6 @@ var (
 type RouterServerConfig struct {
 	Admins     []string
 	Assistants []string
-	MongoDB    *MongoDBConfig
 	APIServer  *APIServerConfig
 
 	ChainIDBlackList []string `toml:",omitempty" json:",omitempty"`
@@ -104,10 +100,6 @@ type RouterServerConfig struct {
 	DynamicFeeTx map[string]*DynamicFeeTxConfig `toml:",omitempty" json:",omitempty"` // key is chain ID
 }
 
-type rsyslogConfig struct {
-	Dir string
-}
-
 // RouterOracleConfig only for oracle
 type RouterOracleConfig struct {
 	ServerAPIAddress        string
@@ -123,12 +115,8 @@ type RouterConfig struct {
 	SwapType    string
 	SwapSubType string
 	Onchain     *OnchainConfig
-	Rsyslog     rsyslogConfig
 	Gateways    map[string][]string // key is chain ID
 	GatewaysExt map[string][]string `toml:",omitempty" json:",omitempty"` // key is chain ID
-	Routers0    map[string]*string
-	Routers1    map[string]*string // key is 1 or nevm
-	Bridges     map[string]*string // key is chain ID
 	MPC         *MPCConfig
 	Extra       *ExtraConfig `toml:",omitempty" json:",omitempty"`
 }
@@ -212,15 +200,6 @@ type APIServerConfig struct {
 	Port             int
 	AllowedOrigins   []string
 	MaxRequestsLimit int
-}
-
-// MongoDBConfig mongodb config
-type MongoDBConfig struct {
-	DBURL    string   `toml:",omitempty" json:",omitempty"`
-	DBURLs   []string `toml:",omitempty" json:",omitempty"`
-	DBName   string
-	UserName string `json:"-"`
-	Password string `json:"-"`
 }
 
 // DynamicFeeTxConfig dynamic fee tx config
@@ -992,11 +971,7 @@ func LoadRouterConfig(configFile string, check bool) *RouterConfig {
 		}
 	}
 
-	setRsyslogDir(config.Rsyslog.Dir)
 	initClient(config.Gateways)
-	initRouter0(config.Routers0)
-	initRouter1(config.Routers1)
-	initBridge(config.Bridges)
 	routerConfigFile = configFile
 	return routerConfig
 }
@@ -1043,24 +1018,6 @@ func initClient(urls map[string][]string) {
 	}
 }
 
-func initBridge(bridges map[string]*string) {
-	for address, dbname := range bridges {
-		Bridge[strings.ToLower(address)] = dbname
-	}
-}
-
-func initRouter0(routers map[string]*string) {
-	for server, router := range routers {
-		Router0[strings.ToLower(server)] = router
-	}
-}
-
-func initRouter1(routers map[string]*string) {
-	for server, router := range routers {
-		Router1[strings.ToLower(server)] = router
-	}
-}
-
 // SetDataDir set data dir
 func SetDataDir(dir string, isServer bool) {
 	if dir == "" {
@@ -1080,24 +1037,6 @@ func SetDataDir(dir string, isServer bool) {
 // GetDataDir get data dir
 func GetDataDir() string {
 	return locDataDir
-}
-
-// setRsyslogDir set Log dir
-func setRsyslogDir(dir string) {
-	if dir == "" {
-		log.Warn("suggest config rsyslog dir")
-		return
-	}
-	currDir, err := common.CurrentDir()
-	if err != nil {
-		log.Fatal("get current dir failed", "err", err)
-	}
-	rsyslogDir = common.AbsolutePath(currDir, dir)
-	log.Info("set rsyslog dir success", "rsyslogdir", rsyslogDir)
-}
-
-func GetRsyslogDir() string {
-	return rsyslogDir
 }
 
 func GetRsyslogSuffix(isbridge bool) string {

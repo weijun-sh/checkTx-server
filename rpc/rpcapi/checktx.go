@@ -68,13 +68,16 @@ func GetStatusInfo(args *RPCQueryHistoryArgs, result *ResultStatus, isrouter boo
 	fmt.Printf("GetStatusInfo, status: %v\n", status)
 	if dbname == "all" {
 		if isrouter {
-			for _, dbname := range routerArray_1 {
-				getStatusInfo(dbname, status, result)
-			}
+			dbnames := params.GetRouterDbName()
+		        for _, dbname := range dbnames {
+				fmt.Printf("dbname: %v\n", dbname)
+		                getStatusInfo(dbname, status, result)
+		        }
 		} else {
-			for _, dbname := range bridgeArray_1 {
-				getBridgeStatusInfo(dbname, status, result)
-			}
+			dbnames := params.GetBridgeDbName()
+		        for _, dbname := range dbnames {
+		                getBridgeStatusInfo(dbname, status, result)
+		        }
 		}
 	} else {
 		getStatusInfo(dbname, status, result)
@@ -128,7 +131,8 @@ func (s *RPCAPI) GetSwapHistory(r *http.Request, args *RPCQueryHistoryArgs, resu
 	}
 	fmt.Printf("dbname: %v, status: %v\n", dbname, status)
 	if dbname == "all" {
-		for _, dbname := range routerArray_1 {
+		dbnames := params.GetRouterDbName()
+		for _, dbname := range dbnames {
 			getSwapHistory(dbname, status, result)
 		}
 	} else {
@@ -169,6 +173,10 @@ type ResultSwap struct {
 
 var ResultData map[string]interface{}
 
+func getDbname4Config(address string) *string {
+	return params.GetDbName4Config(address)
+}
+
 // GetSwapTxUn get swap tx unconfirmed
 func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) error {
 	fmt.Printf("GetSwap, args: %v\n", args)
@@ -186,7 +194,7 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 	to, err := getTransactionTo(params.EthClient[chainid], common.HexToHash(txid))
 	if err == nil {
 		// bridge deposit
-		dbname = params.Bridge[strings.ToLower(to)]
+		dbname = getDbname4Config(to)
 		if dbname == nil {
 			dbname, isbridge = getAddress4Contract(chainid, txid)
 		}
@@ -241,7 +249,7 @@ func getAddress4Contract(chainid, txid string) (*string, bool) {
 	fmt.Printf("getAddress4Contract, txHash: %v\n", txid)
 	var dbname *string
 	isbridge := true
-	to, topic, err := getTransactionReceiptTo(params.EthClient[chainid], common.HexToHash(txid))
+	to, token, topic, err := getTransactionReceiptTo(params.EthClient[chainid], common.HexToHash(txid))
 	fmt.Printf("getTransactionReceiptTo, to: %v\n", to)
 	if err != nil {
 		fmt.Printf("getTransactionReceiptTo, chainid: %v, txid: %v, err: %v\n", chainid, txid, err)
@@ -251,10 +259,11 @@ func getAddress4Contract(chainid, txid string) (*string, bool) {
 	case swapoutTopic:
 		fmt.Printf("getTransactionReceiptTo, isBridgeSwapout\n")
 		minter, err := GetMinersAddress(params.EthClient[chainid], to)
-		fmt.Printf("getTransactionReceiptTo, isBridgeSwapout, miner: %v\n", minter)
+		fmt.Printf("getTransactionReceiptTo, isBridgeSwapout, miner: %v, err: %v, to: %v\n", minter, err, to)
 		if err == nil {
 			for _, m := range minter {
-				dn := params.Bridge[strings.ToLower(*m)]
+				fmt.Printf("getTransactionReceiptTo, m: %v\n", *m)
+				dn := getDbname4Config(*m)
 				if dn != nil {
 					dbname = dn
 					break
@@ -263,21 +272,23 @@ func getAddress4Contract(chainid, txid string) (*string, bool) {
 		} else {
 			minter, err := GetOwnerAddress(params.EthClient[chainid], to)
 			if err == nil {
-				dbname = params.Bridge[strings.ToLower(minter)]
+				dbname = getDbname4Config(minter)
 			}
 		}
 	case routerTopic:
-		minter, err := GetRouterAddress(params.EthClient["56"], chainid, to)
+		minter, err := GetRouterAddress(params.EthClient["56"], chainid, to, token)
 		fmt.Printf("getTransactionReceiptTo, isRouter, minter: %v, err: %v\n", minter, err)
 		if err == nil {
-			dbname = params.Bridge[strings.ToLower(minter)]
+			dbname = getDbname4Config(minter)
+			fmt.Printf("to: %v, dbname: %v\n", to, dbname)
 			isbridge = false
 		}
 	case swapinTopic:
 		fmt.Printf("getTransactionReceiptTo, isBridgeSwapin\n")
-		dbname = params.Bridge[strings.ToLower(to)]
+		dbname = getDbname4Config(to)
 	}
 
+	fmt.Printf("dbname: %v\n", dbname)
 	return dbname, isbridge
 }
 
@@ -301,7 +312,8 @@ func (s *RPCAPI) GetSwapinHistory(r *http.Request, args *RPCQueryHistoryArgs, re
 	}
 	fmt.Printf("dbname: %v, status: %v\n", dbname, status)
 	if dbname == "all" {
-		for _, dbname := range bridgeArray_1 {
+		dbnames := params.GetBridgeDbName()
+		for _, dbname := range dbnames {
 			getBridgeSwapHistory(dbname, status, result, true)
 		}
 	} else {
@@ -353,7 +365,8 @@ func (s *RPCAPI) GetSwapoutHistory(r *http.Request, args *RPCQueryHistoryArgs, r
 	}
 	fmt.Printf("dbname: %v, status: %v\n", dbname, status)
 	if dbname == "all" {
-		for _, dbname := range bridgeArray_1 {
+		dbnames := params.GetBridgeDbName()
+		for _, dbname := range dbnames {
 			getBridgeSwapHistory(dbname, status, result, false)
 		}
 	} else {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/big"
 	"strings"
 	"strconv"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/weijun-sh/checkTx-server/params"
 	"github.com/weijun-sh/checkTx-server/router"
 	"github.com/weijun-sh/checkTx-server/tokens"
+	"github.com/weijun-sh/checkTx-server/tokens/eth/abicoder"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -71,40 +73,40 @@ func getTransactionTo(client *ethclient.Client, txHash common.Hash) (string, err
 }
 
 //txHash = common.HexToHash(hash)
-func getTransactionReceiptTo(client *ethclient.Client, txHash common.Hash) (string, int, error) {
+func getTransactionReceiptTo(client *ethclient.Client, txHash common.Hash) (string, string, int, error) {
 	for i := 0; i< 3; i++ {
 		receipt, err := client.TransactionReceipt(context.Background(), txHash)
 		if err == nil {
 			if len(receipt.Logs) == 0 {
-				return "", 0, errors.New("no receipt")
+				return "", "", 0, errors.New("no receipt")
 			}
 			for _, log := range receipt.Logs {
 				//fmt.Printf("topic: %v\n", log.Topics[0])
 				logTopic := log.Topics[0].String()
 				if isRouterTopic(logTopic) {
-					return log.Address.String(), routerTopic, nil
+					return log.Address.String(), string(common.BytesToAddress(log.Topics[1][:]).Hex()), routerTopic, nil
 				}
 			}
 			for _, log := range receipt.Logs {
 				//fmt.Printf("topic: %v\n", log.Topics[0])
 				logTopic := log.Topics[0].String()
 				if isSwapoutTopic(logTopic) {
-					return log.Address.String(), swapoutTopic, nil
+					return log.Address.String(), string(common.BytesToAddress(log.Topics[1][:]).Hex()), swapoutTopic, nil
 				}
 			}
 			for _, log := range receipt.Logs {
 				fmt.Printf("topic: %v\n", log.Topics[0])
 				logTopic := log.Topics[0].String()
 				if isSwapinTopic(logTopic) {
-					return string(common.BytesToAddress(log.Topics[2][:]).Hex()), swapinTopic, nil
+					return string(common.BytesToAddress(log.Topics[2][:]).Hex()), string(common.BytesToAddress(log.Topics[1][:]).Hex()), swapinTopic, nil
 				}
 			}
-			return "", 0, errors.New("get receipt topic mismatch")
+			return "", "", 0, errors.New("get receipt topic mismatch")
 		}
 		//fmt.Printf("getTransactionReceiptTo, txHash: %v, err: %v\n", txHash, err)
 		time.Sleep(1 * time.Second)
 	}
-	return "", 0, errors.New("get receipt failed")
+	return "", "", 0, errors.New("get receipt failed")
 }
 
 func isContractAddress(gateway *[]string, address string) (bool, error) {
@@ -215,22 +217,57 @@ func GetMinersAddress(client *ethclient.Client, contract string) ([]*string, err
         if errm != nil {
                 return nil, errm
         }
+	fmt.Printf("GetMinersAddress, minter: %v\n", minter.Minters)
 	return minter.Minters, nil
 }
 
-func GetRouterAddress(client *ethclient.Client, chainid, to string) (string, error) {
-	for n, r := range params.Router1 {
+func GetRouterAddress(client *ethclient.Client, chainid, to, token string) (string, error) {
+	for router, dbname := range params.Routers {
 		var isnevm bool
-		if strings.ToLower(n) == "nevm" {
+		if strings.Contains(strings.ToLower(*dbname), "-nevm") {
 			isnevm = true
 		}
-		address, err := getRouterAddress(client, *r, chainid, isnevm)
-		fmt.Printf("router: %v, address: %v, to: %v, i: %v\n", r, address, to, n)
+		address, err := getRouterCustomAddress(client, router, chainid, token)
+		fmt.Printf("router(custom): %v, address: %v, i: %v, chainid: %v, token: %v\n", router, address, *dbname, chainid, token)
 		if err == nil && strings.EqualFold(address, to) {
-			return *r, nil
+			return router, nil
+		}
+		address, err = getRouterAddress(client, router, chainid, isnevm)
+		fmt.Printf("router: %v, address: %v, to: %v, i: %v\n", router, address, to, *dbname)
+		if err == nil && strings.EqualFold(address, to) {
+			return router, nil
 		}
 	}
 	return "",nil
+}
+
+// getRouterCustomAddress call "getCustomConfig(uint256,string)"
+func getRouterCustomAddress(client *ethclient.Client, contract string, chainid, tokenaddress string) (string, error) {
+	fmt.Printf("GetRouterCustomAddress, contract: %v, chainid: %v, tokenaddress: %v\n", contract, chainid, tokenaddress)
+	//data := make(hexutil.Bytes, 100)
+	//copy(data[:4], common.FromHex("0x61387d61"))
+	//n, _ := strconv.ParseUint(chainid, 10, 32)
+	//copy(data[4:36], common.LeftPadBytes(common.FromHex("0x40"), 32))
+	//copy(data[4:36], common.LeftPadBytes(common.FromHex(fmt.Sprintf("0x%x", n)), 32))
+	//copy(data[36:], common.LeftPadBytes(common.FromHex("0x40"), 32))
+	//copy(data[36:], tokenaddress)
+	chainID := big.NewInt(int64(43114))
+	funcHash := common.FromHex("0x61387d61")
+	data := abicoder.PackDataWithFuncHash(funcHash, chainID, []byte(tokenaddress))
+
+        to := common.HexToAddress(contract)
+        msg := ethereum.CallMsg{
+                To:   &to,
+                Data: data,
+        }
+        result, err := client.CallContract(context.Background(), msg, nil)
+	fmt.Printf("err: %v, result: %v\n", err, result)
+        if err != nil {
+                return "", err
+        }
+	fmt.Printf("getRouterCustomAddress, result: %v, ok\n", result)
+	return abicoder.ParseStringInData(result, 0)
+	//return string(common.BytesToAddress(result).Hex()), nil
 }
 
 // getRouterAddress call "getChainConfig(uint256)"
@@ -251,7 +288,7 @@ func getRouterAddress(client *ethclient.Client, contract string, chainid string,
         if err != nil {
                 return "", err
         }
-	//fmt.Printf("getRouterAddress, result: %v\n", result)
+	fmt.Printf("getRouterAddress, result: %v\n", result)
 	return getChainConfigAddress(result, isNevm)
 }
 

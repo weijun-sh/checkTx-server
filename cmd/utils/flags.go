@@ -19,9 +19,9 @@ var (
 		Usage:   "Specify config file",
 	}
         // serverdir --serverdir
-        ServerDirFlag = &cli.StringFlag{
+        ServerDbConfigDirFlag = &cli.StringFlag{
                 Name:  "serverdir",
-                Usage: "Specify server directory",
+                Usage: "Specify server db config directory",
         }
 	// LogFileFlag --log
 	LogFileFlag = &cli.StringFlag{
@@ -165,8 +165,8 @@ func GetConfigFilePath(ctx *cli.Context) string {
 	return ctx.String(ConfigFileFlag.Name)
 }
 
-// GetServerDir specified by `--serverdir`
-func GetServerDir(ctx *cli.Context) string {
-        return ctx.String(ServerDirFlag.Name)
+// GetServerDbConfigDir specified by `--serverdir`
+func GetServerDbConfigDir(ctx *cli.Context) string {
+        return ctx.String(ServerDbConfigDirFlag.Name)
 }
 

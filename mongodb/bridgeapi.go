@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/weijun-sh/checkTx-server/common"
-	//"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/params"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -51,6 +51,10 @@ const (
 
 // FindSwapResult find swap result
 func FindSwapResult(isSwapin bool, dbname, txid, pairID, bind string) (*MgoBridgeSwapResult, error) {
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
 	if isSwapin {
 		tablename := tbSwapinResults
 		database := client.Database(dbname)
@@ -65,6 +69,10 @@ func FindSwapResult(isSwapin bool, dbname, txid, pairID, bind string) (*MgoBridg
 
 // FindSwap find swap
 func FindSwap(isSwapin bool, dbname, txid, pairID, bind string) (*MgoBridgeSwap, error) {
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
 	if isSwapin {
 		tablename := tbSwapins
 		database := client.Database(dbname)
@@ -288,6 +296,10 @@ func findSwapsOrSwapResultsWithPairIDAndStatus(result interface{}, pairID string
 //
 // FindSwapinResults find swapin history results
 func FindSwapinResults(dbname, address, pairID string, offset, limit int, status string) ([]*MgoBridgeSwapResult, error) {
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
 	tablename := tbSwapinResults
 	database := client.Database(dbname)
 	c := database.Collection(tablename)
@@ -349,6 +361,10 @@ func FindSwapinResults(dbname, address, pairID string, offset, limit int, status
 //
 // FindSwapoutResults find swapout history results
 func FindSwapoutResults(dbname, address, pairID string, offset, limit int, status string) ([]*MgoBridgeSwapResult, error) {
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
 	tablename := tbSwapoutResults
 	database := client.Database(dbname)
 	c := database.Collection(tablename)
@@ -908,6 +924,10 @@ var defaultGetStatusInfoFilter = []SwapStatus{
 // GetBridgeStatusInfo get status info
 //func GetBridgeStatusInfo(dbname, statuses string) (map[string]map[string]interface{}, error) {
 func GetBridgeStatusInfo(dbname, statuses string) (map[string]interface{}, error) {
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
 	filterStatuses := getBridgeStatusesFromStr(statuses)
 	if len(filterStatuses) == 0 {
 		filterStatuses = defaultGetStatusInfoFilter

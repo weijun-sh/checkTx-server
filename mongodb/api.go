@@ -10,6 +10,7 @@ import (
 
 	"github.com/weijun-sh/checkTx-server/common"
 	"github.com/weijun-sh/checkTx-server/log"
+	"github.com/weijun-sh/checkTx-server/params"
 	"github.com/weijun-sh/checkTx-server/router"
 	"github.com/weijun-sh/checkTx-server/tokens"
 
@@ -164,12 +165,20 @@ func FindRouterSwapAuto(dbname, fromChainID, txid string, logindex int) (*MgoSwa
 }
 
 func findFirstRouterSwap(dbname, fromChainID, txid string) (*MgoSwap, error) {
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
+	}
 	tablename := tbRouterSwaps
 	database := client.Database(dbname)
 	c := database.Collection(tablename)
 	result := &MgoSwap{}
 	query := getChainAndTxIDQuery(fromChainID, txid)
-	err := c.FindOne(clientCtx, query).Decode(result)
+	err = c.FindOne(clientCtx, query).Decode(result)
 	if err != nil {
 		return nil, mgoError(err)
 	}
@@ -384,12 +393,20 @@ func FindBridgeSwapResultAuto(dbname, txid string) (*MgoBridgeSwapResult, error)
 // FindBridgeSwapResult find router swap result
 func FindBridgeSwapResult(dbname, txid string) (*MgoBridgeSwapResult, error) {
 	//fmt.Printf("FindBridgeSwapResult, txhash: %v\n", txid)
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
+	}
 	tablename := tbSwapinResults
 	database := client.Database(dbname)
 	c := database.Collection(tablename)
 
 	result := &MgoBridgeSwapResult{}
-	err := c.FindOne(clientCtx, bson.M{"txid": txid}).Decode(result)
+	err = c.FindOne(clientCtx, bson.M{"txid": txid}).Decode(result)
 	if err != nil {
 		tablename := tbSwapoutResults
 		database := client.Database(dbname)
@@ -411,12 +428,20 @@ func FindBridgeSwapAuto(dbname, txid string) (*MgoBridgeSwap, error) {
 // FindBridgeSwap find router swap
 func FindBridgeSwap(dbname, txid string) (*MgoBridgeSwap, error) {
 	//fmt.Printf("FindBridgeSwap, txhash: %v\n", txid)
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
+	}
 	tablename := tbSwapins
 	database := client.Database(dbname)
 	c := database.Collection(tablename)
 
 	result := &MgoBridgeSwap{}
-	err := c.FindOne(clientCtx, bson.M{"txid": txid}).Decode(result)
+	err = c.FindOne(clientCtx, bson.M{"txid": txid}).Decode(result)
 	if err != nil {
 		tablename := tbSwapouts
 		database := client.Database(dbname)
@@ -450,13 +475,21 @@ func FindRouterSwapResultAuto(dbname, fromChainID, txid string, logindex int) (*
 
 func findFirstRouterSwapResult(dbname, fromChainID, txid string) (*MgoSwapResult, error) {
 	//fmt.Printf("findFirstRouterSwapResult, txhash: %v\n", txid)
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
+	}
 	tablename := tbRouterSwapResults
 	database := client.Database(dbname)
 	c := database.Collection(tablename)
 
 	result := &MgoSwapResult{}
 	query := getChainAndTxIDQuery(fromChainID, txid)
-	err := c.FindOne(clientCtx, query).Decode(result)
+	err = c.FindOne(clientCtx, query).Decode(result)
 	if err != nil {
 		return nil, mgoError(err)
 	}
@@ -592,6 +625,14 @@ func getStatusesFromStr(status string) (registerStatuses, resultStatuses []SwapS
 // FindRouterSwapResults find router swap results with chainid and address
 //nolint:gocyclo // allow long method
 func FindRouterSwapResults(dbname, fromChainID, address string, offset, limit int, status string) ([]*MgoSwapResult, error) {
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
+	}
 	var queries []bson.M
 
 	if address != "" && address != allAddresses {
@@ -640,7 +681,6 @@ func FindRouterSwapResults(dbname, fromChainID, address string, offset, limit in
 	c := database.Collection(tablename)
 
 	var cur *mongo.Cursor
-	var err error
 	switch len(queries) {
 	case 0:
 		cur, err = c.Find(clientCtx, bson.M{}, opts)
@@ -908,6 +948,14 @@ func GetStatusInfo(dbname, statuses string) (statusInfo map[string]interface{}, 
 
 func getStatusInfo(dbname, tablename string, filterStatuses []SwapStatus) (result []bson.M, err error) {
 	fmt.Printf("getStatusInfo mgo, dbname: %v, tablename: %v, filterStatuses: %v\n", dbname, tablename, filterStatuses)
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
+	}
 	database := client.Database(dbname)
 	c := database.Collection(tablename)
 	pipeOption := []bson.M{

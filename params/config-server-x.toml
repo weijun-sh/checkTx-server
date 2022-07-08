@@ -1,0 +1,19 @@
+# a short string to identify the server
+Identifier = "server_#0" # server_#0: #0 mongo, server_#1: #1 mongo
+RsyslogDir = "/opt/rsyslog/server-0"
+
+# modgodb database connection config
+[MongoDB]
+# DBURLs is prefered if exists. forbids set both DBURL and DBURLs.
+#DBURL = "localhost:27017,localhost:12345"
+DBURLs = ["127.0.0.1:123456"]
+DBName = "db"
+UserName = "user"
+Password = "passwd"
+
+[Routers] # BSC
+"0xd4844e892e18955d711d2B94B516e96E33dfA000" = "Router"
+
+[Bridges]
+# address = bridge/dbname
+"0x5A6C228e85172dfA9d4844a01CE453a3549c2000" = "ETH2BSC"

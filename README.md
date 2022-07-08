@@ -13,8 +13,8 @@ please ref. [config-example.toml](https://github.com/weijun-sh/checkTx-server/bl
 ## 2. run rsyslog
 
 ```shell
-# for server run (add '--runserver' option)
-setsid ./build/bin/rsyslog --config config.toml --log logs/rsyslog.log --runserver
+# run
+setsid ./build/bin/rsyslog --config config.toml --log logs/rsyslog.log --serverdir serverdir
 
 ```
 
