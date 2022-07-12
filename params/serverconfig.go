@@ -26,6 +26,11 @@ var (
 	Routers map[string]*string = make(map[string]*string) // address -> dbname
 	routerDbName []string
 	bridgeDbName []string
+	bridgeNevmDbName map[string][]string = make(map[string][]string)
+)
+
+var (
+	nevmChainArray = []string{"BTC", "BLOCK", "BOBA", "CMP", "COLX", "DOGE", "JEWEL", "LTC", "NEBULAS", "REI", "RONIN", "RSK", "TERRA", "XRP"}
 )
 
 // ServerDbConfig server config
@@ -250,7 +255,16 @@ func initServerDbName() {
 			if dbnameStore[*name] == nil {
 				dbnameStore[*name] = name
 				bridgeDbName = append(bridgeDbName, *name)
+				initNevmDbName(*name)
 			}
+		}
+	}
+}
+
+func initNevmDbName(name string) {
+	for _, btc := range nevmChainArray {
+		if strings.Contains(name, btc) {
+			bridgeNevmDbName[strings.ToLower(btc)] = append(bridgeNevmDbName[strings.ToLower(btc)], name)
 		}
 	}
 }
@@ -265,6 +279,14 @@ func GetRouterDbName() []string {
 
 func GetBridgeDbName() []string {
 	return bridgeDbName
+}
+
+func GetBridgeNevmDbName(btc string) []string {
+	return bridgeNevmDbName[strings.ToLower(btc)]
+}
+
+func IsNevmChain(btc string) bool {
+	return len(bridgeNevmDbName[strings.ToLower(btc)]) != 0
 }
 
 func GetClientByDbName(name string) (*mongo.Client, error) {

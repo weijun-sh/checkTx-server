@@ -187,9 +187,14 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 	}
 	result.Code = 0
 	result.Msg = ""
+	result.Data = make(map[string]interface{}, 0)
+
+	if params.IsNevmChain(args.ChainID) {
+		return getNevmChainSwap(r, args, result)
+	}
+
 	var dbname *string
 
-	result.Data = make(map[string]interface{}, 0)
 	isbridge := true
 	to, err := getTransactionTo(params.EthClient[chainid], common.HexToHash(txid))
 	if err == nil {
@@ -227,22 +232,43 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 		result.Msg = "tx not found"
 		return errors.New("tx not found")
 	}
-	//for _, dbname := range routerArray_1 {
-	//	fmt.Printf("find dbname: %v\n", dbname)
-	//	res, err := swapapi.GetRouterSwap(dbname, args.ChainID, args.TxID, args.LogIndex)
-	//	if err == nil && res != nil {
-	//		result.Data[dbname] = res
-	//		return nil
-	//	}
-	//}
-	//for _, dbname := range bridgeArray_1 {
-	//	fmt.Printf("find dbname: %v\n", dbname)
-	//	res, err := swapapi.GetBridgeSwap(dbname, args.ChainID, args.TxID)
-	//	if err == nil && res != nil {
-	//		result.Data[dbname] = res
-	//		return nil
-	//	}
-	//}
+	return nil
+}
+
+func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) error {
+	var dbnameFound *string
+	isbridge := true
+
+	dbnames := params.GetBridgeNevmDbName(args.ChainID)
+	for _, dbname := range dbnames {
+		fmt.Printf("find dbname: %v\n", dbname)
+		res, err := swapapi.GetBridgeSwap(dbname, args.ChainID, args.TxID)
+		if err == nil && res != nil {
+			result.Data[dbname] = res
+			dbnameFound = &dbname
+			break
+		}
+	}
+	if dbnameFound == nil {
+		dbnames = params.GetRouterDbName()
+		for _, dbname := range dbnames {
+			fmt.Printf("find dbname: %v\n", dbname)
+			res, err := swapapi.GetRouterSwap(dbname, args.ChainID, args.TxID, args.LogIndex)
+			if err == nil && res != nil {
+				result.Data[dbname] = res
+				dbnameFound = &dbname
+				isbridge = false
+				break
+			}
+		}
+	}
+	// log
+	if dbnameFound != nil {
+		reslog := swapapi.GetFileLogs(*dbnameFound, args.TxID, isbridge)
+		if reslog != nil {
+			result.Data["log"] = reslog
+		}
+	}
 	return nil
 }
 
