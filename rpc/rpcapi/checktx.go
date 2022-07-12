@@ -212,7 +212,8 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 		}
 		if err == nil && res != nil {
 			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
-			bridgeData[*dbname] = res
+			nametmp := updateRouterDbname_0(*dbname)
+			bridgeData[nametmp] = res
 			result.Data["bridge"] = bridgeData
 		}
 		// log
@@ -243,6 +244,13 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 	//	}
 	//}
 	return nil
+}
+
+func updateRouterDbname_0(dbname string) string {
+	if dbname == "Router-1029_#0" {
+		return "Router-2_#0"
+	}
+	return dbname
 }
 
 func getAddress4Contract(chainid, txid string) (*string, bool) {

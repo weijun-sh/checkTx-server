@@ -228,7 +228,7 @@ func GetRouterAddress(client *ethclient.Client, chainid, to, token string) (stri
 			isnevm = true
 		}
 		address, err := getRouterCustomAddress(client, router, chainid, token)
-		fmt.Printf("router(custom): %v, address: %v, i: %v, chainid: %v, token: %v\n", router, address, *dbname, chainid, token)
+		fmt.Printf("router(custom): %v, address: %v, dbname: %v, chainid: %v, token: %v\n", router, address, *dbname, chainid, token)
 		if err == nil && strings.EqualFold(address, to) {
 			return router, nil
 		}
@@ -243,31 +243,34 @@ func GetRouterAddress(client *ethclient.Client, chainid, to, token string) (stri
 
 // getRouterCustomAddress call "getCustomConfig(uint256,string)"
 func getRouterCustomAddress(client *ethclient.Client, contract string, chainid, tokenaddress string) (string, error) {
+	tokenaddress = strings.ToLower(tokenaddress)
 	fmt.Printf("GetRouterCustomAddress, contract: %v, chainid: %v, tokenaddress: %v\n", contract, chainid, tokenaddress)
-	//data := make(hexutil.Bytes, 100)
+	n, _ := strconv.ParseUint(chainid, 10, 32)
+	//data := make(hexutil.Bytes, 164)
 	//copy(data[:4], common.FromHex("0x61387d61"))
-	//n, _ := strconv.ParseUint(chainid, 10, 32)
-	//copy(data[4:36], common.LeftPadBytes(common.FromHex("0x40"), 32))
+	////copy(data[4:36], common.LeftPadBytes(common.FromHex("0x40"), 32))
 	//copy(data[4:36], common.LeftPadBytes(common.FromHex(fmt.Sprintf("0x%x", n)), 32))
-	//copy(data[36:], common.LeftPadBytes(common.FromHex("0x40"), 32))
-	//copy(data[36:], tokenaddress)
-	chainID := big.NewInt(int64(43114))
+	//copy(data[36:68], common.LeftPadBytes(common.FromHex("0x40"), 32))
+	//copy(data[68:100], common.LeftPadBytes(common.FromHex(fmt.Sprintf("0x%x", len(tokenaddress))), 32))
+	//copy(data[100:], tokenaddress)
+	//fmt.Printf("getRouterCustomAddress, data: %v\n", []byte(data))
+	chainID := big.NewInt(int64(n))
 	funcHash := common.FromHex("0x61387d61")
-	data := abicoder.PackDataWithFuncHash(funcHash, chainID, []byte(tokenaddress))
+	data2 := abicoder.PackDataWithFuncHash(funcHash, chainID, []byte(tokenaddress))
 
+	//fmt.Printf("getRouterCustomAddress, data2: %v\n", data2)
         to := common.HexToAddress(contract)
         msg := ethereum.CallMsg{
                 To:   &to,
-                Data: data,
+                Data: data2,
         }
         result, err := client.CallContract(context.Background(), msg, nil)
-	fmt.Printf("err: %v, result: %v\n", err, result)
+	//fmt.Printf("err: %v, result: %v\n", err, result)
         if err != nil {
                 return "", err
         }
-	fmt.Printf("getRouterCustomAddress, result: %v, ok\n", result)
+	//fmt.Printf("getRouterCustomAddress, result: %v, ok\n", result)
 	return abicoder.ParseStringInData(result, 0)
-	//return string(common.BytesToAddress(result).Hex()), nil
 }
 
 // getRouterAddress call "getChainConfig(uint256)"
@@ -288,7 +291,7 @@ func getRouterAddress(client *ethclient.Client, contract string, chainid string,
         if err != nil {
                 return "", err
         }
-	fmt.Printf("getRouterAddress, result: %v\n", result)
+	//fmt.Printf("getRouterAddress, result: %v\n", result)
 	return getChainConfigAddress(result, isNevm)
 }
 
