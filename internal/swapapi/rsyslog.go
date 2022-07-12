@@ -55,10 +55,10 @@ type ResultBridge struct {
 
 // ===== get from log
 // GetLogs check bridge/router txhash
-func GetFileLogs(dbname, txhash string, isbridge bool) interface{} {
+func GetFileLogs(dbname, txhash string, isbridge bool) []interface{} {
 	//fmt.Printf("GetFileLogs, bridge: %v, txhash: %v\n", bridge, txhash)
 	if len(dbname) == 0 || !common.IsHexHash(txhash) {
-		return errors.New("bridge or txhash format error")
+		return nil
 	}
 	return getBridgeTxhash4Rsyslog(dbname, txhash, isbridge)
 }

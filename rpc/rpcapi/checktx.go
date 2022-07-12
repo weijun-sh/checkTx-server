@@ -14,14 +14,6 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-// #1
-var (
-	// tables: RouterSwapResults, RouterSwaps
-	routerArray_1 = []string{"Router", "Router-Nevm"} //co-Router
-	// tables: Blacklist, LatestScanInfo, LatestSwapNonces, P2shAddresses, RegisteredAddress, SwapHistory, SwapStatistics, SwapinResults, Swapins, SwapoutResults, Swapouts
-	bridgeArray_1 = []string{"BTC2BSC", "ETH2BSC", "FSN2BSC", "ETH2FSN", "ETH2Fantom", "FSN2Fantom", "FSN2ETH", "BTC2ETH", "LTC2FSN", "LTC2ETH", "LTC2BSC", "LTC2Fantom", "BLOCK2ETH", "ETH2HT", "FSN2HT", "BTC2HT", "BNB2HT", "Fantom2ETH", "FORETH2Fantom", "HT2BSC", "FORETH2BSC", "FSN2MATIC", "FSN2XDAI", "ETH2XDAI", "ETH2MATIC", "ETH2AVAX", "FSN2AVAX", "BLOCK2AVAX", "BSC2AVAX", "BSC2MATIC", "BSC2ETH", "BSC2Fantom", "Harmony2MATIC", "BTC2Harmony", "COLX2BSC", "Fantom2BSC", "ETH2KCS", "COLX2ETH", "HT2MATIC", "MATIC2BSC", "MATIC2AVAX", "BSC2KCS", "BSC2Harmony", "BSC2OKT", "MATIC2OKT", "BLOCK2MATIC", "BLOCK2BSC", "BSC2MOON", "ETH2MOON", "MATIC2Fantom", "ETH2ARB", "ARB2ETH", "BSC2ARB", "MATIC2MOON", "BSC2IOTEX", "BSC2SHI", "ETH2SHI", "MOON2ETH", "BSC2CELO", "AVAX2Fantom", "ETH2HARM", "HT2Fantom", "ARB2MOON", "AVAX2BSC", "MOON2BSC", "ARB2MATIC", "ETH2TLOS", "CELO2BSC", "TERRA2Fantom", "MOON2SHI", "MATIC2HT", "ETH2IOTEX", "Harmony2BSC", "ETH2MOONBEAM", "BSC2MOONBEAM", "ETH2BOBA", "SHI2BSC", "ETH2astar", "ETH2OKT", "MATIC2ETH", "MATIC2Harmony", "MATIC2MOONBEAM", "AVAX2MOONBEAM", "BSC2astar", "BSC2ROSE", "ETH2ROSE", "ETH2VELAS", "MATIC2XDAI", "IOTEX2BSC", "XRP2AVAX", "ETH2CLV", "ETH2MIKO", "XRP2AVAX", "ETH2MIKO", "ETH2CONFLUX", "KCC2CONFLUX", "ETH2OPTIMISM", "ETH2RSK", "BSC2RSK", "JEWEL2Harmony", "TERRA2ETH", "ETH2EVMOS", "ETH2DOGE", "ETH2ETC", "ETH2CMP", "USDT2Fantom"}
-)
-
 const (
 	swapinTopic = iota + 1
 	swapoutTopic
@@ -105,25 +97,17 @@ func getBridgeStatusInfo(dbname, status string, result *ResultStatus) {
 	}
 }
 
-type ResultHistory struct {
-	Code uint64 `json:"code"`
-	Msg string `json:"msg"`
-	Data map[string]*statusConfig `json:"data"`
-}
-
-type statusConfig = []interface{}
-
-func (s *RPCAPI) GetSwapNotStable(r *http.Request, args *RPCNullArgs, result *ResultHistory) error {
+func (s *RPCAPI) GetSwapNotStable(r *http.Request, args *RPCNullArgs, result *ResultSwap) error {
 	var argsH RPCQueryHistoryArgs
 	argsH.Bridge = "all"
 	argsH.Status = "0,8,9,12,14,17" // default
 	return s.GetSwapHistory(r, &argsH, result)
 }
 
-func (s *RPCAPI) GetSwapHistory(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistory) error {
+func (s *RPCAPI) GetSwapHistory(r *http.Request, args *RPCQueryHistoryArgs, result *ResultSwap) error {
 	result.Code = 0
 	result.Msg = ""
-	result.Data = make(map[string]*statusConfig, 0)
+	result.Data = make(map[string][]interface{}, 0)
 	dbname := args.Bridge
 	status := args.Status
 	if status == "" {
@@ -141,10 +125,10 @@ func (s *RPCAPI) GetSwapHistory(r *http.Request, args *RPCQueryHistoryArgs, resu
 	return nil
 }
 
-func getSwapHistory(dbname, statuses string, result *ResultHistory) {
+func getSwapHistory(dbname, statuses string, result *ResultSwap) {
 	fmt.Printf("\nfind dbname: %v\n", dbname)
 	parts := strings.Split(statuses, ",")
-	var s statusConfig = make(statusConfig, 0)
+	var s []interface{} = make([]interface{}, 0)
 	var getH bool
 	for _, status := range parts {
 		if status == "10" {
@@ -161,17 +145,18 @@ func getSwapHistory(dbname, statuses string, result *ResultHistory) {
 		}
 	}
 	if getH {
-		result.Data[dbname] = &s
+		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+		nametmp := updateRouterDbname_0(dbname)
+		bridgeData[nametmp] = &s
+		result.Data["router"] = append(result.Data["router"], bridgeData)
 	}
 }
 
 type ResultSwap struct {
 	Code uint64 `json:"code"`
 	Msg string `json:"msg"`
-	Data map[string]interface{} `json:"data"`
+	Data map[string][]interface{} `json:"data"`
 }
-
-var ResultData map[string]interface{}
 
 func getDbname4Config(address string) *string {
 	return params.GetDbName4Config(address)
@@ -187,7 +172,7 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 	}
 	result.Code = 0
 	result.Msg = ""
-	result.Data = make(map[string]interface{}, 0)
+	result.Data = make(map[string][]interface{}, 0)
 
 	if params.IsNevmChain(args.ChainID) {
 		return getNevmChainSwap(r, args, result)
@@ -204,6 +189,10 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 			dbname, isbridge = getAddress4Contract(chainid, txid)
 		}
 	}
+	returnName := "router"
+	if isbridge {
+		returnName = "bridge"
+	}
 	if dbname != nil {
 		var res interface{}
 		var err error
@@ -219,7 +208,7 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
 			nametmp := updateRouterDbname_0(*dbname)
 			bridgeData[nametmp] = res
-			result.Data["bridge"] = bridgeData
+			result.Data[returnName] = append(result.Data[returnName], bridgeData)
 		}
 		// log
 		reslog := swapapi.GetFileLogs(*dbname, args.TxID, isbridge)
@@ -244,7 +233,10 @@ func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSw
 		fmt.Printf("find dbname: %v\n", dbname)
 		res, err := swapapi.GetBridgeSwap(dbname, args.ChainID, args.TxID)
 		if err == nil && res != nil {
-			result.Data[dbname] = res
+			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+			nametmp := updateRouterDbname_0(dbname)
+			bridgeData[nametmp] = res
+			result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
 			dbnameFound = &dbname
 			break
 		}
@@ -255,7 +247,10 @@ func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSw
 			fmt.Printf("find dbname: %v\n", dbname)
 			res, err := swapapi.GetRouterSwap(dbname, args.ChainID, args.TxID, args.LogIndex)
 			if err == nil && res != nil {
-				result.Data[dbname] = res
+				var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+				nametmp := updateRouterDbname_0(dbname)
+				bridgeData[nametmp] = res
+				result.Data["router"] = append(result.Data["router"], bridgeData)
 				dbnameFound = &dbname
 				isbridge = false
 				break
@@ -335,10 +330,10 @@ func isBridgeSwapout(topic int) bool {
 
 // bridge
 // GetSwapinHistory api
-func (s *RPCAPI) GetSwapinHistory(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistory) error {
+func (s *RPCAPI) GetSwapinHistory(r *http.Request, args *RPCQueryHistoryArgs, result *ResultSwap) error {
 	result.Code = 0
 	result.Msg = ""
-	result.Data = make(map[string]*statusConfig, 0)
+	result.Data = make(map[string][]interface{}, 0)
 	dbname := args.Bridge
 	status := args.Status
 	if status == "" {
@@ -356,10 +351,10 @@ func (s *RPCAPI) GetSwapinHistory(r *http.Request, args *RPCQueryHistoryArgs, re
 	return nil
 }
 
-func getBridgeSwapHistory(dbname, statuses string, result *ResultHistory, isSwapin bool) error {
+func getBridgeSwapHistory(dbname, statuses string, result *ResultSwap, isSwapin bool) error {
 	fmt.Printf("\nfind dbname: %v\n", dbname)
 	parts := strings.Split(statuses, ",")
-	var s statusConfig = make(statusConfig, 0)
+	var s []interface{} = make([]interface{}, 0)
 	var getH bool
 	for _, status := range parts {
 		if status == "10" {
@@ -382,16 +377,19 @@ func getBridgeSwapHistory(dbname, statuses string, result *ResultHistory, isSwap
 		}
 	}
 	if getH {
-		result.Data[dbname] = &s
+		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+		nametmp := updateRouterDbname_0(dbname)
+		bridgeData[nametmp] = &s
+		result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
 	}
         return nil
 }
 
 // GetSwapoutHistory api
-func (s *RPCAPI) GetSwapoutHistory(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistory) error {
+func (s *RPCAPI) GetSwapoutHistory(r *http.Request, args *RPCQueryHistoryArgs, result *ResultSwap) error {
 	result.Code = 0
 	result.Msg = ""
-	result.Data = make(map[string]*statusConfig, 0)
+	result.Data = make(map[string][]interface{}, 0)
 	dbname := args.Bridge
 	status := args.Status
 	if status == "" {
