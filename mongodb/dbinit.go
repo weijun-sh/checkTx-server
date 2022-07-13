@@ -66,12 +66,12 @@ func doCleanup() {
 	MgoWaitGroup.Wait()
 
 	client := params.GetServerDbClient()
-	for _, c := range client {
+	for appname, c := range client {
 		err := c.Disconnect(clientCtx)
 		if err != nil {
-			log.Error("[mongodb] close connection failed", "appName", appIdentifier, "err", err)
+			log.Error("[mongodb] close connection failed", "appName", appname, "err", err)
 		} else {
-			log.Info("[mongodb] close connection success", "appName", appIdentifier)
+			log.Info("[mongodb] close connection success", "appName", appname)
 		}
 	}
 }
