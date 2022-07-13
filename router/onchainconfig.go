@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
-	"fmt"
+	//"fmt"
 	"math/big"
 	"sync/atomic"
 	"time"
@@ -160,7 +160,7 @@ func parseMinterConfig(data []byte) (*tokens.MinterConfig, error) {
 	config := &tokens.MinterConfig{}
 	config.Count = common.GetBigInt(data, 0, 32).Uint64()
 	data = data[32:]
-	fmt.Printf("config.Count: %v, data: %v\n", config.Count, data)
+	//fmt.Printf("config.Count: %v, data: %v\n", config.Count, data)
 	var i uint64
 	for i = 0; i < config.Count; i++ {
 		minter := common.BytesToAddress(common.GetData(data, i * 32, i * 32 + 32)).LowerHex()

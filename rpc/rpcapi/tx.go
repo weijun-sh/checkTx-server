@@ -19,6 +19,7 @@ import (
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
@@ -55,21 +56,31 @@ var (
 )
 
 //txHash = common.HexToHash(hash)
-func getTransactionTo(client *ethclient.Client, txHash common.Hash) (string, error) {
+func getTransaction(client *ethclient.Client, txHash common.Hash) (*types.Transaction, error) {
 	fmt.Printf("getTransactionTo, txHash: %v\n", txHash)
 	if client == nil {
-		return "", errors.New("client is nil")
+		return nil, errors.New("client is nil")
 	}
 	for i := 0; i< 3; i++ {
 		tx, _, err := client.TransactionByHash(context.Background(), txHash)
 		if err == nil {
 			fmt.Printf("getTransactionTo, return address: %v\n", tx.To().String())
-			return tx.To().String(), nil
+			return tx, nil
 		}
 		fmt.Printf("getTransactionTo, err: %v, i: %v\n", err, i)
 		time.Sleep(1 * time.Second)
 	}
-	return "", errors.New("get tx failed")
+	return nil, errors.New("get tx failed")
+}
+
+func getTransactionReceipt(client *ethclient.Client, txHash common.Hash) (*types.Receipt, error) {
+	for i := 0; i< 3; i++ {
+		receipt, err := client.TransactionReceipt(context.Background(), txHash)
+		if err == nil {
+			return receipt, nil
+		}
+	}
+	return nil, errors.New("get tx receipt failed")
 }
 
 //txHash = common.HexToHash(hash)
@@ -212,7 +223,7 @@ func GetMinersAddress(client *ethclient.Client, contract string) ([]*string, err
         if err != nil {
                 return nil, err
         }
-	fmt.Printf("GetMinersAddress, result: %v\n", result)
+	//fmt.Printf("GetMinersAddress, result: %v\n", result)
 	minter, errm := router.ParseMinterConfig(result)
         if errm != nil {
                 return nil, errm
