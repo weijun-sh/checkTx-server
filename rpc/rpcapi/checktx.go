@@ -12,7 +12,7 @@ import (
 	"github.com/weijun-sh/checkTx-server/tokens"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/davecgh/go-spew/spew"
+	//"github.com/davecgh/go-spew/spew"
 )
 
 const (
@@ -143,9 +143,8 @@ func getSwapHistory(dbname, statuses string, result *ResultSwap) {
 			for _, st := range si {
 				s = append(s, st)
 				getH = true
-				spew.Printf("%v\n", st)
+				//spew.Printf("%v\n", st)
 			}
-			//return nil
 		}
 	}
 	if getH {
@@ -169,35 +168,60 @@ func getDbname4Config(address string) *string {
 // GetSwapTxUn get swap tx unconfirmed
 func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) error {
 	fmt.Printf("GetSwap, args: %v\n", args)
-	chainid := args.ChainID
-	txid := args.TxID
-	if chainid == "" || txid == "" {
-		return errors.New("args err")
+	if args.ChainID == "" || args.TxID == "" {
+		fmt.Printf("args is nil.")
+		return errors.New("args is nil")
 	}
+	if !params.IsSupportChainID(args.ChainID) {
+		fmt.Printf("chainid: %v is not support.\n", args.ChainID)
+		return errors.New("chainid not support")
+	}
+
+	var (
+		dbname *string
+		isbridge bool
+	)
+
+	// 1 get swap, return dbname
+	if params.IsNevmChain(args.ChainID) {
+		dbname, isbridge = getNevmChainSwap(r, args, result)
+	} else {
+		dbname, isbridge = getChainSwap(r, args, result)
+	}
+	// error return
+	if dbname == nil {
+		fmt.Printf("GetSwap, txHash: %v not found\n", args.TxID)
+		result.Code = 1
+		result.Msg = "tx not found"
+		return errors.New("tx not found")
+	}
+
+	// 2 get 2 get log
+	reslog := swapapi.GetFileLogs(*dbname, args.TxID, isbridge)
+	result.Data["log"] = reslog
+
+	// 3 get swap tx
+	return nil
+}
+
+func getChainSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) (dbname *string, isbridge bool) {
 	result.Code = 0
 	result.Msg = ""
 	result.Data = make(map[string][]interface{}, 0)
 
-	if params.IsNevmChain(args.ChainID) {
-		return getNevmChainSwap(r, args, result)
-	}
-
-	var dbname *string
-
-	isbridge := true
-	to, err := getTransactionTo(params.EthClient[chainid], common.HexToHash(txid))
+	to, err := getTransactionTo(params.EthClient[args.ChainID], common.HexToHash(args.TxID))
 	if err == nil {
 		// bridge deposit
 		dbname = getDbname4Config(to)
 		if dbname == nil {
-			dbname, isbridge = getAddress4Contract(chainid, txid)
+			dbname, isbridge = getAddress4Contract(args.ChainID, args.TxID)
 		}
 	}
-	returnName := "router"
-	if isbridge {
-		returnName = "bridge"
-	}
 	if dbname != nil {
+		returnName := "router"
+		if isbridge {
+			returnName = "bridge"
+		}
 		var res interface{}
 		var err error
 		// bridge
@@ -217,18 +241,8 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 			bridgeData[nametmp] = res
 			result.Data[returnName] = append(result.Data[returnName], bridgeData)
 		}
-		// log
-		reslog := swapapi.GetFileLogs(*dbname, args.TxID, isbridge)
-		if reslog != nil {
-			result.Data["log"] = reslog
-		}
-	} else {
-		fmt.Printf("GetSwap, txHash: %v not found\n", txid)
-		result.Code = 1
-		result.Msg = "tx not found"
-		return errors.New("tx not found")
 	}
-	return nil
+	return dbname, isbridge
 }
 
 func addBridgeChainID(dbname string, res *swapapi.BridgeSwapInfo) {
@@ -247,9 +261,10 @@ func addBridgeChainID(dbname string, res *swapapi.BridgeSwapInfo) {
 	}
 }
 
-func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) error {
-	var dbnameFound *string
-	isbridge := true
+func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) (dbnameFound *string, isbridge bool) {
+	result.Code = 0
+	result.Msg = ""
+	result.Data = make(map[string][]interface{}, 0)
 
 	dbnames := params.GetBridgeNevmDbName(args.ChainID)
 	for _, dbname := range dbnames {
@@ -261,6 +276,7 @@ func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSw
 			bridgeData[dbname] = res
 			result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
 			dbnameFound = &dbname
+			isbridge = true
 			break
 		}
 	}
@@ -280,14 +296,7 @@ func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSw
 			}
 		}
 	}
-	// log
-	if dbnameFound != nil {
-		reslog := swapapi.GetFileLogs(*dbnameFound, args.TxID, isbridge)
-		if reslog != nil {
-			result.Data["log"] = reslog
-		}
-	}
-	return nil
+	return dbnameFound, isbridge
 }
 
 func updateRouterDbname_0(dbname string) string {
@@ -403,7 +412,7 @@ func getBridgeSwapHistory(dbname, statuses string, result *ResultSwap, isSwapin 
 				addBridgeChainID(dbname, st)
 				s = append(s, st)
 				getH = true
-				spew.Printf("%v\n", st)
+				//spew.Printf("%v\n", st)
 			}
 			//return nil
 		}

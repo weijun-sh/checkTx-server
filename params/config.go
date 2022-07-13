@@ -1061,3 +1061,7 @@ func GetRsyslogSuffix(isbridge bool) string {
 	return RsyslogRouterSuffix
 }
 
+func IsSupportChainID(chainid string) bool {
+	return EthRpc[strings.ToLower(chainid)] != nil
+}
+

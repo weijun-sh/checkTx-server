@@ -56,7 +56,7 @@ type ResultBridge struct {
 // ===== get from log
 // GetLogs check bridge/router txhash
 func GetFileLogs(dbname, txhash string, isbridge bool) []interface{} {
-	//fmt.Printf("GetFileLogs, bridge: %v, txhash: %v\n", bridge, txhash)
+	fmt.Printf("GetFileLogs, dbname: %v, isbridge: %v, txhash: %v\n", dbname, isbridge, txhash)
 	if len(dbname) == 0 || !common.IsHexHash(txhash) {
 		return nil
 	}
@@ -103,6 +103,7 @@ func getRsyslogFiles(dbname string, isbridge bool) []string {
 }
 
 func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) []interface{} {
+	fmt.Printf("getBridgeTxhash4Rsyslog, dbname: %v, txhash: %v, isbridge: %v\n", dbname, txhash, isbridge)
 	var logRet []interface{}
 	finish := 2 // find 2 files, from newest
 	logFiles := getRsyslogFiles(dbname, isbridge)
