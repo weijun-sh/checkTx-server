@@ -9,6 +9,7 @@ import (
 
 	"github.com/weijun-sh/checkTx-server/internal/swapapi"
 	"github.com/weijun-sh/checkTx-server/params"
+	"github.com/weijun-sh/checkTx-server/tokens"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/davecgh/go-spew/spew"
@@ -199,7 +200,10 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 		// bridge
 		if isbridge {
 			fmt.Printf("find bridge dbname: %v\n", *dbname)
-			res, err = swapapi.GetBridgeSwap(*dbname, args.ChainID, args.TxID)
+			resb, errb := swapapi.GetBridgeSwap(*dbname, args.ChainID, args.TxID)
+			addBridgeChainID(*dbname, resb)
+			res = resb
+			err = errb
 		} else {
 			fmt.Printf("find router dbname: %v\n", *dbname)
 			res, err = swapapi.GetRouterSwap(*dbname, args.ChainID, args.TxID, "0")
@@ -224,6 +228,22 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 	return nil
 }
 
+func addBridgeChainID(dbname string, res *swapapi.BridgeSwapInfo) {
+	chainid := strings.Split(dbname, "2")
+	if len(chainid) != 2 {
+		return
+	}
+	fromChainid := params.GetChainID(chainid[0])
+	toChainid := params.GetChainID(chainid[1])
+	if res.SwapType == uint32(tokens.SwapinType) {
+		res.FromChainID = fromChainid
+		res.ToChainID = toChainid
+	} else if res.SwapType == uint32(tokens.SwapoutType) {
+		res.FromChainID = toChainid
+		res.ToChainID = fromChainid
+	}
+}
+
 func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) error {
 	var dbnameFound *string
 	isbridge := true
@@ -234,8 +254,8 @@ func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSw
 		res, err := swapapi.GetBridgeSwap(dbname, args.ChainID, args.TxID)
 		if err == nil && res != nil {
 			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
-			nametmp := updateRouterDbname_0(dbname)
-			bridgeData[nametmp] = res
+			addBridgeChainID(dbname, res)
+			bridgeData[dbname] = res
 			result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
 			dbnameFound = &dbname
 			break
@@ -369,6 +389,7 @@ func getBridgeSwapHistory(dbname, statuses string, result *ResultSwap, isSwapin 
 		}
 		if errs == nil && len(si) != 0 {
 			for _, st := range si {
+				addBridgeChainID(dbname, st)
 				s = append(s, st)
 				getH = true
 				spew.Printf("%v\n", st)
@@ -378,8 +399,7 @@ func getBridgeSwapHistory(dbname, statuses string, result *ResultSwap, isSwapin 
 	}
 	if getH {
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
-		nametmp := updateRouterDbname_0(dbname)
-		bridgeData[nametmp] = &s
+		bridgeData[dbname] = &s
 		result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
 	}
         return nil

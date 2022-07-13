@@ -44,6 +44,8 @@ type BridgeSwapInfo struct {
 	TxHeight      uint64     `json:"txheight"`
 	From          string     `json:"from"`
 	To            string     `json:"to"`
+	FromChainID   string     `json:"fromChainID"`
+	ToChainID     string     `json:"toChainID"`
 	Bind          string     `json:"bind"`
 	Value         string     `json:"value"`
 	SwapTx        string     `json:"swaptx"`

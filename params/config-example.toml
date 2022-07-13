@@ -1,11 +1,3 @@
-# modgodb database connection config
-[Server.MongoDB]
-# DBURLs is prefered if exists. forbids set both DBURL and DBURLs.
-#DBURL = "localhost:27017,localhost:12345"
-DBURLs = ["localhost:27017"]
-DBName = "databasename"
-UserName = "username"
-Password = "password"
 
 # check tx API service
 [Server.APIServer]
@@ -16,17 +8,10 @@ AllowedOrigins = ["*"]
 # Maximum number of requests to limit per second
 MaxRequestsLimit = 100
 
-[Rsyslog]
-Dir = "/opt/rsyslog/dcrm-node1"
-
 # Gateways config. key is chainID
 [Gateways]
 1     = ["https://nodes.mewapi.io/rpc/eth", ""]
 
-[Routers0]
-
-[Routers1]
-
-[Bridges]
-# address = bridge/dbname
+[ChainNames]
+1     	= ["eth"]
 

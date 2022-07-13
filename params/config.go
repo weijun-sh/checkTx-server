@@ -29,6 +29,7 @@ var (
 
 	EthClient map[string]*ethclient.Client = make(map[string]*ethclient.Client, 0)
 	EthRpc map[string]*[]string = make(map[string]*[]string, 0)
+	chainName map[string]string = make(map[string]string, 0)
 
 	routerConfigFile string
 	locDataDir       string
@@ -116,6 +117,7 @@ type RouterConfig struct {
 	SwapSubType string
 	Onchain     *OnchainConfig
 	Gateways    map[string][]string // key is chain ID
+	ChainNames  map[string][]string // key is chain ID
 	GatewaysExt map[string][]string `toml:",omitempty" json:",omitempty"` // key is chain ID
 	MPC         *MPCConfig
 	Extra       *ExtraConfig `toml:",omitempty" json:",omitempty"`
@@ -972,6 +974,7 @@ func LoadRouterConfig(configFile string, check bool) *RouterConfig {
 	}
 
 	initClient(config.Gateways)
+	initChainName(config.ChainNames)
 	routerConfigFile = configFile
 	return routerConfig
 }
@@ -1015,6 +1018,18 @@ func initClient(urls map[string][]string) {
 	for chainid, rpc := range urls {
 		EthClient[chainid] = client.InitClient(chainid, rpc[0])
 		EthRpc[chainid] = &rpc
+	}
+}
+
+func GetChainID(chainname string) string {
+	return chainName[strings.ToLower(chainname)]
+}
+
+func initChainName(chainname map[string][]string) {
+	for chainid, name := range chainname {
+		for _, n := range name {
+			chainName[strings.ToLower(n)] = chainid
+		}
 	}
 }
 
