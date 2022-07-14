@@ -74,6 +74,9 @@ func getTransaction(client *ethclient.Client, txHash common.Hash) (*types.Transa
 }
 
 func getTransactionReceipt(client *ethclient.Client, txHash common.Hash) (*types.Receipt, error) {
+	if client == nil {
+		return nil, errors.New("client is nil")
+	}
 	for i := 0; i< 3; i++ {
 		receipt, err := client.TransactionReceipt(context.Background(), txHash)
 		if err == nil {

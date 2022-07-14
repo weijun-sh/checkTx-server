@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/weijun-sh/checkTx-server/common"
@@ -73,70 +74,98 @@ type retData struct {
 	Log *bridgeTxhashStatus `json:"log"`
 }
 
-func getRsyslogFiles(dbname string, isbridge bool) []string {
-	var ret []string
+func getRsyslogFiles(dbname string, isbridge bool) (fileRet string, fileArray []string) {
 	dir := params.GetRsyslogDir(dbname)
 	if dir == "" {
-		return ret
+		return fileRet, fileArray
 	}
 	suffix := params.GetRsyslogSuffix(isbridge)
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return ret
+		return fileRet, fileArray
 	}
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
 	}
 	filename := fmt.Sprintf("%v%v", dbname, suffix)
+	filenameOthers := fmt.Sprintf("%v%v-", dbname, suffix)
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
 		fileNameWithSuffix := path.Base(file.Name())
-		if strings.HasPrefix(fileNameWithSuffix, filename) {
+		if strings.EqualFold(fileNameWithSuffix, filename) {
+			fileRet = fmt.Sprintf("%v/%v", dir, file.Name())
+		}
+		if strings.HasPrefix(fileNameWithSuffix, filenameOthers) {
 			filenametmp := fmt.Sprintf("%v/%v", dir, file.Name())
-			ret = append(ret, filenametmp)
+			fileArray = append(fileArray, filenametmp)
 		}
 	}
-	return ret
+	return fileRet, fileArray
+}
+
+type fileSlice []string
+func (f fileSlice) Len() int {
+	return len(f)
+}
+
+func (f fileSlice) Swap(i, j int) {
+	f[i], f[j] = f[j], f[i]
+}
+
+func (f fileSlice) Less(i, j int) bool {
+	return f[i] > f[j]
 }
 
 func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) []interface{} {
 	fmt.Printf("getBridgeTxhash4Rsyslog, dbname: %v, txhash: %v, isbridge: %v\n", dbname, txhash, isbridge)
 	var logRet []interface{}
-	finish := 2 // find 2 files, from newest
-	logFiles := getRsyslogFiles(dbname, isbridge)
+	logFile, logFiles := getRsyslogFiles(dbname, isbridge)
+	sort.Sort(fileSlice(logFiles))
+	readLine := 100
+
+	finish := getTxhash4Logfile(logFile, txhash, &logRet, &readLine)
+	if finish {
+		return logRet
+	}
 	for _, filePath := range logFiles {
-		if finish <= 0 {
+		finish := getTxhash4Logfile(filePath, txhash, &logRet, &readLine)
+		if finish {
 			break
-		}
-		FileHandle, err := os.Open(filePath) // read only
-		if err != nil {
-			continue
-		}
-		defer FileHandle.Close()
-		lineReader := bufio.NewReader(FileHandle)
-		find := false
-		for {
-			line, _, err := lineReader.ReadLine()
-			if err == io.EOF {
-				break
-			}
-			find := strings.Contains(string(line), txhash)
-			if find {
-				retStr, err := getLogsParse(string(line))
-				if err == nil {
-					find = true
-					logRet = append(logRet, retStr)
-				}
-			}
-		}
-		if find {
-			finish -= 1
 		}
 	}
 	return logRet
+}
+
+func getTxhash4Logfile(filePath, txhash string, logRet *[]interface{}, readLine *int) bool {
+	FileHandle, err := os.Open(filePath) // read only
+	if err != nil {
+		return false
+	}
+	defer FileHandle.Close()
+	findTxhash := false
+	lineReader := bufio.NewReader(FileHandle)
+	for {
+		line, _, err := lineReader.ReadLine()
+		if err == io.EOF {
+			break
+		}
+		find := strings.Contains(string(line), txhash)
+		if find {
+			retStr, err := getLogsParse(string(line))
+			if err == nil {
+				*logRet = append(*logRet, retStr)
+				*readLine -= 1
+				if *readLine <= 0 {
+					findTxhash = true
+				}
+			}
+		}
+	}
+	fmt.Printf("getTxhash4Logfile, filePath: %v, txhash: %v, find: %v\n", filePath, txhash, findTxhash)
+	return findTxhash
 }
 
 func getLogsParse(logRet string) (interface{}, error) {
