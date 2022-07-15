@@ -86,6 +86,19 @@ func getTransactionReceipt(client *ethclient.Client, txHash common.Hash) (*types
 	return nil, errors.New("get tx receipt failed")
 }
 
+func getHeaderByHash(client *ethclient.Client, txHash common.Hash) (*types.Header, error) {
+	if client == nil {
+		return nil, errors.New("client is nil")
+	}
+	for i := 0; i< 3; i++ {
+		header, err := client.HeaderByHash(context.Background(), txHash)
+		if err == nil {
+			return header, nil
+		}
+	}
+	return nil, errors.New("get header failed")
+}
+
 //txHash = common.HexToHash(hash)
 func getTransactionReceiptTo(client *ethclient.Client, txHash common.Hash) (string, string, int, error) {
 	for i := 0; i< 3; i++ {

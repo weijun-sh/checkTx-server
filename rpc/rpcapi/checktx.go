@@ -245,6 +245,7 @@ type swaptxConfig struct {
 	ChainID string `json:"fromChainID"`
 	TxID string `json:"txid"`
 	Status string `json:"status"`
+	Timestamp uint64 `bson:"timestamp"`
 	Transaction *types.Transaction `json:"transaction"`
 }
 
@@ -262,6 +263,8 @@ func getSwaptx(swaptx interface{}, isbridge bool) *swaptxConfig {
 	stx.ChainID = chainid
 	stx.TxID = txid
 	stx.Status = fmt.Sprintf("%v", receipt.Status)
+	header, _ := getHeaderByHash(params.EthClient[chainid], receipt.BlockHash)
+	stx.Timestamp = header.Time
 	tx, _ := getTransaction(params.EthClient[chainid], common.HexToHash(txid))
 	stx.Transaction = tx
 	return &stx
