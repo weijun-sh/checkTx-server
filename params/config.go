@@ -27,7 +27,7 @@ var IsTestMode bool
 var (
 	routerConfig = &RouterConfig{Extra: &ExtraConfig{}}
 
-	EthClient map[string]*ethclient.Client = make(map[string]*ethclient.Client, 0)
+	ethClient map[string]*ethclient.Client = make(map[string]*ethclient.Client, 0)
 	EthRpc map[string]*[]string = make(map[string]*[]string, 0)
 	chainName map[string]string = make(map[string]string, 0)
 
@@ -1008,7 +1008,7 @@ func ReloadRouterConfig() {
 }
 
 func CloseClient() {
-	for _, ethcli := range EthClient {
+	for _, ethcli := range ethClient {
 		if ethcli != nil {
 			ethcli.Close()
 		}
@@ -1016,9 +1016,13 @@ func CloseClient() {
 }
 func initClient(urls map[string][]string) {
 	for chainid, rpc := range urls {
-		EthClient[chainid] = client.InitClient(chainid, rpc[0])
-		EthRpc[chainid] = &rpc
+		ethClient[strings.ToLower(chainid)] = client.InitClient(chainid, rpc[0])
+		EthRpc[strings.ToLower(chainid)] = &rpc
 	}
+}
+
+func GetEthClient(chainid string) *ethclient.Client {
+	return ethClient[strings.ToLower(chainid)]
 }
 
 func GetChainID(chainname string) string {

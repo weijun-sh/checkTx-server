@@ -12,7 +12,7 @@ func InitClient(chainid, url string) *ethclient.Client {
 	ethcli, err := ethclient.Dial(url)
 	if err != nil {
 		//log.Fatal("ethclient.Dail failed", "gateway", url, "err", err)
-		log.Warn("ethclient.Dail failed", "gateway", url, "err", err)
+		log.Warn("ethclient.Dail failed", "chainid", chainid, "gateway", url, "err", err)
 	}
 	//log.Info("ethclient.Dail gateway success", "gateway", url)
 	//chainID, errid := ethcli.ChainID(context.Background())

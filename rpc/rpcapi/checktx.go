@@ -245,17 +245,18 @@ type swaptxConfig struct {
 	ChainID string `json:"fromChainID"`
 	TxID string `json:"txid"`
 	Status string `json:"status"`
-	Timestamp uint64 `bson:"timestamp"`
+	Timestamp uint64 `json:"timestamp"`
 	Transaction *types.Transaction `json:"transaction"`
 }
 
 func getSwaptx(swaptx interface{}, isbridge bool) *swaptxConfig {
 	chainid, txid := getSwaptxInfo(swaptx, isbridge)
-	if params.EthClient[chainid] == nil || !checktxcommon.IsHexHash(txid) {
+	ethclient := params.GetEthClient(chainid)
+	if ethclient == nil || !checktxcommon.IsHexHash(txid) {
 		fmt.Printf("swaptx nil\n")
 		return nil
 	}
-	receipt, err := getTransactionReceipt(params.EthClient[chainid], common.HexToHash(txid))
+	receipt, err := getTransactionReceipt(ethclient, common.HexToHash(txid))
 	if err != nil {
 		return nil
 	}
@@ -263,9 +264,9 @@ func getSwaptx(swaptx interface{}, isbridge bool) *swaptxConfig {
 	stx.ChainID = chainid
 	stx.TxID = txid
 	stx.Status = fmt.Sprintf("%v", receipt.Status)
-	header, _ := getHeaderByHash(params.EthClient[chainid], receipt.BlockHash)
+	header, _ := getHeaderByHash(ethclient, receipt.BlockHash)
 	stx.Timestamp = header.Time
-	tx, _ := getTransaction(params.EthClient[chainid], common.HexToHash(txid))
+	tx, _ := getTransaction(ethclient, common.HexToHash(txid))
 	stx.Transaction = tx
 	return &stx
 }
@@ -281,7 +282,8 @@ func getSwaptxInfo(swaptx interface{}, isbridge bool) (string, string) {
 }
 
 func getChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbname *string, swaptx interface{}, isbridge bool, data []interface{}) {
-	tx, err := getTransaction(params.EthClient[args.ChainID], common.HexToHash(args.TxID))
+	ethclient := params.GetEthClient(args.ChainID)
+	tx, err := getTransaction(ethclient, common.HexToHash(args.TxID))
 	if err == nil {
 		to := tx.To().String()
 		// bridge deposit
@@ -370,7 +372,8 @@ func getAddress4Contract(chainid, txid string) (*string, bool) {
 	fmt.Printf("getAddress4Contract, txHash: %v\n", txid)
 	var dbname *string
 	isbridge := true
-	to, token, topic, err := getTransactionReceiptTo(params.EthClient[chainid], common.HexToHash(txid))
+	ethclient := params.GetEthClient(chainid)
+	to, token, topic, err := getTransactionReceiptTo(ethclient, common.HexToHash(txid))
 	fmt.Printf("getTransactionReceiptTo, to: %v\n", to)
 	if err != nil {
 		fmt.Printf("getTransactionReceiptTo, chainid: %v, txid: %v, err: %v\n", chainid, txid, err)
@@ -379,7 +382,7 @@ func getAddress4Contract(chainid, txid string) (*string, bool) {
 	switch(topic) {
 	case swapoutTopic:
 		fmt.Printf("getTransactionReceiptTo, isBridgeSwapout, to: %v\n", to)
-		minter, err := GetMinersAddress(params.EthClient[chainid], to)
+		minter, err := GetMinersAddress(ethclient, to)
 		if err == nil {
 			for _, m := range minter {
 				fmt.Printf("getTransactionReceiptTo, minter: %v\n", *m)
@@ -390,13 +393,13 @@ func getAddress4Contract(chainid, txid string) (*string, bool) {
 				}
 			}
 		} else {
-			minter, err := GetOwnerAddress(params.EthClient[chainid], to)
+			minter, err := GetOwnerAddress(ethclient, to)
 			if err == nil {
 				dbname = getDbname4Config(minter)
 			}
 		}
 	case routerTopic:
-		minter, err := GetRouterAddress(params.EthClient["56"], chainid, to, token)
+		minter, err := GetRouterAddress(params.GetEthClient("56"), chainid, to, token)
 		fmt.Printf("getTransactionReceiptTo, isRouter, minter: %v, err: %v\n", minter, err)
 		if err == nil {
 			dbname = getDbname4Config(minter)
