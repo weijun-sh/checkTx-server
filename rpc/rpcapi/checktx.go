@@ -290,6 +290,7 @@ func getChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbname *string, swa
 		to := tx.To().String()
 		// bridge deposit
 		dbname = getDbname4Config(to)
+		isbridge = true
 		if dbname == nil {
 			dbname, isbridge = getAddress4Contract(args.ChainID, args.TxID)
 		}
