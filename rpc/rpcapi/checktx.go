@@ -265,7 +265,9 @@ func getSwaptx(swaptx interface{}, isbridge bool) *swaptxConfig {
 	stx.TxID = txid
 	stx.Status = fmt.Sprintf("%v", receipt.Status)
 	header, _ := getHeaderByHash(ethclient, receipt.BlockHash)
-	stx.Timestamp = header.Time
+	if header != nil {
+		stx.Timestamp = header.Time
+	}
 	tx, _ := getTransaction(ethclient, common.HexToHash(txid))
 	stx.Transaction = tx
 	return &stx
