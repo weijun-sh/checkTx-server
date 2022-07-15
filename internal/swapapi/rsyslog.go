@@ -18,9 +18,7 @@ import (
 )
 
 var (
-	mongdbArray = []string{"ETH2BSC"}
-	tableArray = []string{"SwapinResults", "Swapins", "SwapoutResults", "Swapouts"}
-			//"Blacklist", "LatestScanInfo", "LatestSwapNonces"
+	maxLog = 0 // default 100
 )
 
 // GetTxhash get bridge/router txhash
@@ -57,6 +55,12 @@ type ResultBridge struct {
 // ===== get from log
 // GetLogs check bridge/router txhash
 func GetFileLogs(dbname, txhash string, isbridge bool) []interface{} {
+	if maxLog == 0 {
+		maxLog = int(params.GetLogsMaxLines(dbname))
+		if maxLog == 0 {
+			maxLog = 100
+		}
+	}
 	fmt.Printf("GetFileLogs, dbname: %v, isbridge: %v, txhash: %v\n", dbname, isbridge, txhash)
 	if len(dbname) == 0 || !common.IsHexHash(txhash) {
 		return nil
@@ -84,6 +88,7 @@ func getRsyslogFiles(dbname string, isbridge bool) (fileRet string, fileArray []
 	if err != nil {
 		return fileRet, fileArray
 	}
+	dbname = params.UpdateRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -124,14 +129,13 @@ func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) []interface{}
 	var logRet []interface{}
 	logFile, logFiles := getRsyslogFiles(dbname, isbridge)
 	sort.Sort(fileSlice(logFiles))
-	readLine := 100
 
-	finish := getTxhash4Logfile(logFile, txhash, &logRet, &readLine)
+	finish := getTxhash4Logfile(logFile, txhash, &logRet)
 	if finish {
 		return logRet
 	}
 	for _, filePath := range logFiles {
-		finish := getTxhash4Logfile(filePath, txhash, &logRet, &readLine)
+		finish := getTxhash4Logfile(filePath, txhash, &logRet)
 		if finish {
 			break
 		}
@@ -139,13 +143,14 @@ func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) []interface{}
 	return logRet
 }
 
-func getTxhash4Logfile(filePath, txhash string, logRet *[]interface{}, readLine *int) bool {
+func getTxhash4Logfile(filePath, txhash string, logRet *[]interface{}) bool {
 	FileHandle, err := os.Open(filePath) // read only
 	if err != nil {
 		return false
 	}
 	defer FileHandle.Close()
 	findTxhash := false
+	lenLog := len(*logRet)
 	lineReader := bufio.NewReader(FileHandle)
 	for {
 		line, _, err := lineReader.ReadLine()
@@ -156,15 +161,16 @@ func getTxhash4Logfile(filePath, txhash string, logRet *[]interface{}, readLine 
 		if find {
 			retStr, err := getLogsParse(string(line))
 			if err == nil {
-				*logRet = append(*logRet, retStr)
-				*readLine -= 1
-				if *readLine <= 0 {
+				if lenLog >= maxLog {
+					*logRet = (*logRet)[1:maxLog]
 					findTxhash = true
 				}
+				lenLog++
+				*logRet = append(*logRet, retStr)
 			}
 		}
 	}
-	fmt.Printf("getTxhash4Logfile, filePath: %v, txhash: %v, find: %v\n", filePath, txhash, findTxhash)
+	fmt.Printf("getTxhash4Logfile, filePath: %v, txhash: %v, readline: %v/%v\n", filePath, txhash, lenLog, maxLog)
 	return findTxhash
 }
 

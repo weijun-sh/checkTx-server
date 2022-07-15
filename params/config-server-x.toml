@@ -1,6 +1,9 @@
 # a short string to identify the server
 Identifier = "server_#0" # server_#0: #0 mongo, server_#1: #1 mongo
+
+[Logs]
 RsyslogDir = "/opt/rsyslog/server-0"
+MaxLines = 100 # max number of lines to return
 
 # modgodb database connection config
 [MongoDB]

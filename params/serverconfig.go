@@ -36,10 +36,15 @@ var (
 // ServerDbConfig server config
 type ServerDbConfig struct {
 	Identifier string
-	RsyslogDir string
+	Logs logsConfig
 	MongoDB *MongoDBConfig
 	Routers map[string]*string
 	Bridges map[string]*string
+}
+
+type logsConfig struct {
+	RsyslogDir string
+	MaxLines uint64
 }
 
 // MongoDBConfig mongodb config
@@ -189,7 +194,7 @@ func LoadServerDbConfigInDir(dir string, check bool) (map[string]*ServerDbConfig
 		if _, exist := serverDbsConfig[Identifier]; exist {
 			return nil, fmt.Errorf("duplicate Identifier '%v'", serverDbCfg.Identifier)
 		}
-		serverDbCfg.RsyslogDir = setRsyslogDir(serverDbCfg.RsyslogDir)
+		serverDbCfg.Logs.RsyslogDir = setRsyslogDir(serverDbCfg.Logs.RsyslogDir)
 		serverDbsConfig[strings.ToLower(Identifier)] = serverDbCfg
 	}
 	if check {
@@ -307,6 +312,30 @@ func GetRsyslogDir(dbname string) string {
 	if config == nil {
 		return ""
 	}
-	return config.RsyslogDir
+	return config.Logs.RsyslogDir
+}
+
+func GetLogsMaxLines(dbname string) uint64 {
+	Identifier := serverDbName[dbname]
+	config := serverDbConfig[Identifier]
+	if config == nil {
+		return 0
+	}
+	return config.Logs.MaxLines
+}
+
+func UpdateRouterDbname_0(dbname string) string {
+	if dbname == "Router-1029_#0" {
+		return "Router-2_#0"
+	}
+	return dbname
+}
+
+func SetRouterDbname_0(dbname string) string {
+	fmt.Printf("setRouterDbname_0, dbname: %v\n", dbname)
+	if dbname == "Router-2_#0" {
+		return "Router-1029_#0"
+	}
+	return dbname
 }
 
