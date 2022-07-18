@@ -53,21 +53,6 @@ type ResultBridge struct {
 }
 
 // ===== get from log
-// GetLogs check bridge/router txhash
-func GetFileLogs(dbname, txhash string, isbridge bool) []interface{} {
-	if maxLog == 0 {
-		maxLog = int(params.GetLogsMaxLines(dbname))
-		if maxLog == 0 {
-			maxLog = 100
-		}
-	}
-	fmt.Printf("GetFileLogs, dbname: %v, isbridge: %v, txhash: %v\n", dbname, isbridge, txhash)
-	if len(dbname) == 0 || !common.IsHexHash(txhash) {
-		return nil
-	}
-	return getBridgeTxhash4Rsyslog(dbname, txhash, isbridge)
-}
-
 type ResultCheckBridge struct {
 	Code uint64 `json:"code"`
 	Msg string `json:"msg"`
@@ -124,10 +109,47 @@ func (f fileSlice) Less(i, j int) bool {
 	return f[i] > f[j]
 }
 
-func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) []interface{} {
+type syslogReturn struct {
+	LogFile string `json:"logFile"`
+	Status string `json:"status"` // 0: ok, 1, err
+	Msg string `json:"msg"`
+	Logs interface{} `json:"logs"`
+}
+
+// GetLogs check bridge/router txhash
+func GetFileLogs(dbname, txhash string, isbridge bool) interface{} {
+	if maxLog == 0 {
+		maxLog = int(params.GetLogsMaxLines(dbname))
+		if maxLog == 0 {
+			maxLog = 100
+		}
+	}
+	return getBridgeTxhash4Rsyslog(dbname, txhash, isbridge)
+}
+
+func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) interface{} {
 	fmt.Printf("getBridgeTxhash4Rsyslog, dbname: %v, txhash: %v, isbridge: %v\n", dbname, txhash, isbridge)
-	var logRet []interface{}
+	var (
+		logRet []interface{}
+		statusret syslogReturn
+	)
+	statusret.Logs = logRet
+	fmt.Printf("GetFileLogs, dbname: %v, isbridge: %v, txhash: %v\n", dbname, isbridge, txhash)
+	if len(dbname) == 0 || !common.IsHexHash(txhash) {
+		statusret.Status = "1"
+		statusret.Msg = fmt.Sprintf("dbname '%v' is nil or txhash '%v' format error", strings.ToUpper(dbname), txhash)
+		logRet = append(logRet, statusret.Status)
+		return statusret
+	}
 	logFile, logFiles := getRsyslogFiles(dbname, isbridge)
+	statusret.LogFile = logFile
+
+	if len(logFiles) == 0 {
+		statusret.Status = "1"
+		statusret.Msg = fmt.Sprintf("log '%v' not exist", strings.ToUpper(dbname))
+		logRet = append(logRet, statusret.Status)
+		return statusret
+	}
 	sort.Sort(fileSlice(logFiles))
 
 	finish := getTxhash4Logfile(logFile, txhash, &logRet)
@@ -140,7 +162,7 @@ func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) []interface{}
 			break
 		}
 	}
-	return logRet
+	return statusret
 }
 
 func getTxhash4Logfile(filePath, txhash string, logRet *[]interface{}) bool {

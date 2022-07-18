@@ -181,7 +181,7 @@ func getDbname4Config(address string) *string {
 func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *ResultSwap) error {
 	fmt.Printf("[rpcapi]GetSwap, args: %v\n", args)
 	if args.ChainID == "" || args.TxID == "" {
-		fmt.Printf("args is nil.")
+		fmt.Printf("args is nil.\n")
 		return errors.New("args is nil")
 	}
 	if !params.IsSupportChainID(args.ChainID) {
@@ -245,6 +245,7 @@ type swaptxConfig struct {
 	ChainID string `json:"fromChainID"`
 	TxID string `json:"txid"`
 	Status string `json:"status"`
+	Msg string `json:"msg"`
 	Timestamp uint64 `json:"timestamp"`
 	Transaction *types.Transaction `json:"transaction"`
 }
@@ -252,15 +253,18 @@ type swaptxConfig struct {
 func getSwaptx(swaptx interface{}, isbridge bool) *swaptxConfig {
 	chainid, txid := getSwaptxInfo(swaptx, isbridge)
 	ethclient := params.GetEthClient(chainid)
+	var stx swaptxConfig
 	if ethclient == nil || !checktxcommon.IsHexHash(txid) {
-		fmt.Printf("swaptx nil\n")
-		return nil
+		stx.Status = "0"
+		stx.Msg = fmt.Sprintf("chainid '%v' client is nil or txhash '%v' format err", chainid, txid)
+		return &stx
 	}
 	receipt, err := getTransactionReceipt(ethclient, common.HexToHash(txid))
 	if err != nil {
-		return nil
+		stx.Status = "0"
+		stx.Msg = fmt.Sprintf("txhash '%v' of chainid '%v' not exist", txid, chainid)
+		return &stx
 	}
-	var stx swaptxConfig
 	stx.ChainID = chainid
 	stx.TxID = txid
 	stx.Status = fmt.Sprintf("%v", receipt.Status)
