@@ -133,7 +133,6 @@ func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) interface{} {
 		logRet []interface{}
 		statusret syslogReturn
 	)
-	statusret.Logs = logRet
 	fmt.Printf("GetFileLogs, dbname: %v, isbridge: %v, txhash: %v\n", dbname, isbridge, txhash)
 	if len(dbname) == 0 || !common.IsHexHash(txhash) {
 		statusret.Status = "1"
@@ -153,15 +152,16 @@ func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) interface{} {
 	sort.Sort(fileSlice(logFiles))
 
 	finish := getTxhash4Logfile(logFile, txhash, &logRet)
-	if finish {
-		return logRet
-	}
-	for _, filePath := range logFiles {
-		finish := getTxhash4Logfile(filePath, txhash, &logRet)
-		if finish {
-			break
+	if !finish {
+		for _, filePath := range logFiles {
+			finish := getTxhash4Logfile(filePath, txhash, &logRet)
+			if finish {
+				break
+			}
 		}
 	}
+	statusret.Status = "0"
+	statusret.Logs = logRet
 	return statusret
 }
 

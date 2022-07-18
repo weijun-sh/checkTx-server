@@ -395,6 +395,7 @@ func FindBridgeSwapResult(dbname, txid string) (*MgoBridgeSwapResult, error) {
 	//fmt.Printf("FindBridgeSwapResult, txhash: %v\n", txid)
 	client, err := params.GetClientByDbName(dbname)
 	if err != nil {
+		fmt.Printf("FindBridgeSwapResult, err: %v\n", err)
 		return nil, err
 	}
 	if strings.HasSuffix(dbname, "_#0") {
