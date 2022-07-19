@@ -15,6 +15,9 @@ import (
 var (
 	routerSwapType SwapType
 	swapConfigMap  = new(sync.Map) // key is tokenID,toChainID
+
+	// StubChainIDBase stub chainID base value
+        StubChainIDBase = big.NewInt(1000000000000)
 )
 
 // IsNativeCoin is native coin

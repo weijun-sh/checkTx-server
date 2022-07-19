@@ -16,6 +16,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -186,7 +187,7 @@ func findFirstRouterSwap(dbname, fromChainID, txid string) (*MgoSwap, error) {
 }
 
 func getChainAndTxIDQuery(fromChainID, txid string) bson.M {
-	qtxid := bson.M{"txid": strings.ToLower(txid)}
+	qtxid := bson.M{"txid": bson.M{"$regex": primitive.Regex{Pattern: txid, Options: "i"}}}
 	qchainid := bson.M{"fromChainID": fromChainID}
 	return bson.M{"$and": []bson.M{qtxid, qchainid}}
 }

@@ -354,10 +354,12 @@ func addBridgeChainID(dbname string, res *swapapi.BridgeSwapInfo) {
 }
 
 func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbnameFound *string, swaptx interface{}, isbridge bool, data []interface{}) {
-	dbnames := params.GetBridgeNevmDbName(args.ChainID)
+	chainid := args.ChainID
+	txid := args.TxID
+	dbnames := params.GetBridgeNevmDbName(chainid)
 	for _, dbname := range dbnames {
 		fmt.Printf("find dbname: %v\n", dbname)
-		res, err := swapapi.GetBridgeSwap(dbname, args.ChainID, args.TxID)
+		res, err := swapapi.GetBridgeSwap(dbname, chainid, txid)
 		if err == nil && res != nil {
 			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
 			addBridgeChainID(dbname, res)
@@ -370,10 +372,11 @@ func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbnameFound *st
 		}
 	}
 	if dbnameFound == nil {
+		chainid := getRouterStubChainID(chainid)
 		dbnames = params.GetRouterDbName()
 		for _, dbname := range dbnames {
 			fmt.Printf("find dbname: %v\n", dbname)
-			res, err := swapapi.GetRouterSwap(dbname, args.ChainID, args.TxID, args.LogIndex)
+			res, err := swapapi.GetRouterSwap(dbname, chainid, txid, args.LogIndex)
 			if err == nil && res != nil {
 				var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
 				nametmp := params.UpdateRouterDbname_0(dbname)
