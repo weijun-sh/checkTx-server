@@ -200,23 +200,29 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 		data []interface{}
 	)
 
-	// 1 get swap, return dbname
-	if params.IsNevmChain(args.ChainID) {
-		dbname, swaptx, isbridge, data = getNevmChainSwap(r, args)
+
+	if args.Bridge == "all" {
+		dbname, swaptx, isbridge, data = getSwapAlldb(args.ChainID, args.TxID)
 	} else {
-		dbname, swaptx, isbridge, data = getChainSwap(r, args)
+		// 1 get swap, return dbname
+		if params.IsNevmChain(args.ChainID) {
+			dbname, swaptx, isbridge, data = getNevmChainSwap(r, args)
+		} else {
+			dbname, swaptx, isbridge, data = getChainSwap(r, args)
+		}
 	}
-	returnName := "router"
-	if isbridge {
-		returnName = "bridge"
-	}
-	result.Data[returnName] = data
-	// error return
 	if dbname == nil {
+		// error return
 		fmt.Printf("GetSwap, txHash: %v not found\n", args.TxID)
 		result.Code = 1
 		result.Msg = "tx not found"
 		return errors.New("tx not found")
+	} else {
+		returnName := "router"
+		if isbridge {
+			returnName = "bridge"
+		}
+		result.Data[returnName] = data
 	}
 
 	wg := new(sync.WaitGroup)
@@ -256,6 +262,9 @@ type swaptxErrConfig struct {
 
 func getSwaptx(swaptx interface{}, isbridge bool) *swaptxConfig {
 	fmt.Printf("swaptx: %v\n", swaptx)
+	if swaptx == nil {
+		return nil
+	}
 	var (
 		stx swaptxConfig
 		stxret swaptxErrConfig
@@ -305,6 +314,39 @@ func getSwaptxInfo(swaptx interface{}, isbridge bool) (string, string) {
 		tx := swaptx.(*swapapi.SwapInfo)
 		return tx.ToChainID, tx.SwapTx
 	}
+}
+
+func getSwapAlldb(chainid, txid string) (dbname *string, swaptx interface{}, isbridge bool, data []interface{}) {
+	dbnames := params.GetBridgeDbName()
+	for _, name := range dbnames {
+		datab, err := swapapi.GetBridgeSwap(name, chainid, txid)
+		if err == nil {
+			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+			bridgeData[name] = datab
+			isbridge = true
+			dbname = &name
+			data = append(data, bridgeData)
+			swaptx = datab
+			break
+		}
+	}
+	if !isbridge {
+		dbnames := params.GetRouterDbName()
+		for _, name := range dbnames {
+			fmt.Printf("dbname: %v\n", name)
+			datab, err := swapapi.GetRouterSwap(name, chainid, txid, "0")
+			if err == nil {
+				var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+				bridgeData[name] = datab
+				isbridge = false
+				dbname = &name
+				data = append(data, bridgeData)
+				swaptx = datab
+				break
+			}
+		}
+	}
+	return dbname, swaptx, isbridge, data
 }
 
 func getChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbname *string, swaptx interface{}, isbridge bool, data []interface{}) {

@@ -21,6 +21,7 @@ type RPCNullArgs struct{}
 
 // RouterSwapKeyArgs args
 type RouterSwapKeyArgs struct {
+	Bridge   string `json:"bridge"`
 	ChainID  string `json:"chainid"`
 	TxID     string `json:"txid"`
 	LogIndex string `json:"logindex"`
