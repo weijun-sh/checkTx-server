@@ -29,6 +29,9 @@ var (
 
 	RPCClientTimeout  = 60
 	wrapRPCQueryError = tokens.WrapRPCQueryError
+
+	receiptStatusSuccess = "0"
+	receiptStatusFailed = "1"
 )
 
 var (

@@ -110,7 +110,7 @@ func (f fileSlice) Less(i, j int) bool {
 }
 
 type syslogReturn struct {
-	Status string `json:"status"` // 0: ok, 1, err
+	Status string `json:"code"` // 0: ok, 1, err
 	Msg string `json:"msg"`
 	Data syslogLogs `json:"data"`
 }

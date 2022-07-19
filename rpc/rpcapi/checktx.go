@@ -265,25 +265,26 @@ func getSwaptx(swaptx interface{}, isbridge bool) *swaptxConfig {
 	chainid, txid := getSwaptxInfo(swaptx, isbridge)
 	stxret.ChainID = chainid
 	if len(txid) == 0 {
-		stx.Status = "0"
+		stx.Status = receiptStatusFailed
 		stx.Msg = fmt.Sprintf("swaptx is nil")
 		return &stx
 	}
 	stxret.TxID = txid
 	ethclient := params.GetEthClient(chainid)
 	if ethclient == nil || !checktxcommon.IsHexHash(txid) {
-		stx.Status = "0"
+		stx.Status = receiptStatusFailed
 		stx.Msg = fmt.Sprintf("chainid '%v' client is nil or txhash '%v' format err", chainid, txid)
 		return &stx
 	}
 	receipt, err := getTransactionReceipt(ethclient, common.HexToHash(txid))
 	if err != nil {
-		stx.Status = "0"
+		stx.Status = receiptStatusFailed
 		stx.Msg = fmt.Sprintf("txhash '%v' of chainid '%v' not exist", txid, chainid)
 		return &stx
 	}
-	stx.Status = fmt.Sprintf("%v", receipt.Status)
+	stx.Status = receiptStatusSuccess
 	if receipt.Status == types.ReceiptStatusFailed {
+		stx.Status = receiptStatusFailed
 		stx.Msg = fmt.Sprintf("txhash '%v' receipt status failed", stxret.TxID)
 		return &stx
 	}
