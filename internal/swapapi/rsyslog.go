@@ -73,7 +73,7 @@ func getRsyslogFiles(dbname string, isbridge bool) (fileRet string, fileArray []
 	if err != nil {
 		return fileRet, fileArray
 	}
-	dbname = params.UpdateRouterDbname_0(dbname)
+	dbname = params.SetRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -127,51 +127,55 @@ func GetFileLogs(dbname, txhash string, isbridge bool) interface{} {
 	return getBridgeTxhash4Rsyslog(dbname, txhash, isbridge)
 }
 
-func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) interface{} {
+func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) (statusret syslogReturn) {
 	fmt.Printf("getBridgeTxhash4Rsyslog, dbname: %v, txhash: %v, isbridge: %v\n", dbname, txhash, isbridge)
 	var (
 		logRet []interface{}
-		statusret syslogReturn
 	)
 	fmt.Printf("GetFileLogs, dbname: %v, isbridge: %v, txhash: %v\n", dbname, isbridge, txhash)
 	if len(dbname) == 0 || !common.IsHexHash(txhash) {
 		statusret.Status = "1"
 		statusret.Msg = fmt.Sprintf("dbname '%v' is nil or txhash '%v' format error", strings.ToUpper(dbname), txhash)
-		logRet = append(logRet, statusret.Status)
 		return statusret
 	}
 	logFile, logFiles := getRsyslogFiles(dbname, isbridge)
 	statusret.LogFile = logFile
 
-	if len(logFiles) == 0 {
+	if len(logFile) == 0 {
 		statusret.Status = "1"
 		statusret.Msg = fmt.Sprintf("log '%v' not exist", strings.ToUpper(dbname))
-		logRet = append(logRet, statusret.Status)
 		return statusret
 	}
 	sort.Sort(fileSlice(logFiles))
 
-	finish := getTxhash4Logfile(logFile, txhash, &logRet)
-	if !finish {
+	found, finished := getTxhash4Logfile(logFile, txhash, &logRet)
+	if !finished {
 		for _, filePath := range logFiles {
-			finish := getTxhash4Logfile(filePath, txhash, &logRet)
-			if finish {
+			foundA, finishedA := getTxhash4Logfile(filePath, txhash, &logRet)
+			if foundA {
+				found = foundA
+			}
+			if finishedA {
 				break
 			}
 		}
 	}
 	statusret.Status = "0"
+	if !found {
+		statusret.Status = "1"
+		statusret.Msg = fmt.Sprintf("txhash '%v' not found in log '%v'", txhash, strings.ToUpper(dbname))
+	}
 	statusret.Logs = logRet
 	return statusret
 }
 
-func getTxhash4Logfile(filePath, txhash string, logRet *[]interface{}) bool {
+func getTxhash4Logfile(filePath, txhash string, logRet *[]interface{}) (findTxhash bool, findFinished bool) {
 	FileHandle, err := os.Open(filePath) // read only
 	if err != nil {
-		return false
+		return false, false
 	}
 	defer FileHandle.Close()
-	findTxhash := false
+
 	lenLog := len(*logRet)
 	lineReader := bufio.NewReader(FileHandle)
 	for {
@@ -183,9 +187,10 @@ func getTxhash4Logfile(filePath, txhash string, logRet *[]interface{}) bool {
 		if find {
 			retStr, err := getLogsParse(string(line))
 			if err == nil {
+				findTxhash = true
 				if lenLog >= maxLog {
 					*logRet = (*logRet)[1:maxLog]
-					findTxhash = true
+					findFinished = true
 				}
 				lenLog++
 				*logRet = append(*logRet, retStr)
@@ -193,7 +198,7 @@ func getTxhash4Logfile(filePath, txhash string, logRet *[]interface{}) bool {
 		}
 	}
 	fmt.Printf("getTxhash4Logfile, filePath: %v, txhash: %v, readline: %v/%v\n", filePath, txhash, lenLog, maxLog)
-	return findTxhash
+	return findTxhash, findFinished
 }
 
 func getLogsParse(logRet string) (interface{}, error) {
