@@ -242,25 +242,34 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 }
 
 type swaptxConfig struct {
+	Status string `json:"code"`
+	Msg string `json:"msg"`
+	Data *swaptxErrConfig `json:"data"`
+}
+
+type swaptxErrConfig struct {
 	ChainID string `json:"toChainID"`
 	TxID string `json:"swaptx"`
-	Status string `json:"status"`
-	Msg string `json:"msg"`
 	Timestamp uint64 `json:"timestamp"`
 	Transaction *types.Transaction `json:"transaction"`
 }
 
 func getSwaptx(swaptx interface{}, isbridge bool) *swaptxConfig {
-	var stx swaptxConfig
 	fmt.Printf("swaptx: %v\n", swaptx)
+	var (
+		stx swaptxConfig
+		stxret swaptxErrConfig
+	)
+	stx.Data = &stxret
+
 	chainid, txid := getSwaptxInfo(swaptx, isbridge)
-	stx.ChainID = chainid
+	stxret.ChainID = chainid
 	if len(txid) == 0 {
 		stx.Status = "0"
 		stx.Msg = fmt.Sprintf("swaptx is nil")
 		return &stx
 	}
-	stx.TxID = txid
+	stxret.TxID = txid
 	ethclient := params.GetEthClient(chainid)
 	if ethclient == nil || !checktxcommon.IsHexHash(txid) {
 		stx.Status = "0"
@@ -275,15 +284,15 @@ func getSwaptx(swaptx interface{}, isbridge bool) *swaptxConfig {
 	}
 	stx.Status = fmt.Sprintf("%v", receipt.Status)
 	if receipt.Status == types.ReceiptStatusFailed {
-		stx.Msg = fmt.Sprintf("txhash '%v' receipt status failed", stx.TxID)
+		stx.Msg = fmt.Sprintf("txhash '%v' receipt status failed", stxret.TxID)
 		return &stx
 	}
 	header, _ := getHeaderByHash(ethclient, receipt.BlockHash)
 	if header != nil {
-		stx.Timestamp = header.Time
+		stxret.Timestamp = header.Time
 	}
 	tx, _ := getTransaction(ethclient, common.HexToHash(txid))
-	stx.Transaction = tx
+	stxret.Transaction = tx
 	return &stx
 }
 

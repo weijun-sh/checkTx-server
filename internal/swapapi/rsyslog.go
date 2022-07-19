@@ -110,9 +110,13 @@ func (f fileSlice) Less(i, j int) bool {
 }
 
 type syslogReturn struct {
-	LogFile string `json:"logFile"`
 	Status string `json:"status"` // 0: ok, 1, err
 	Msg string `json:"msg"`
+	Data syslogLogs `json:"data"`
+}
+
+type syslogLogs struct {
+	LogFile string `json:"logFile"`
 	Logs interface{} `json:"logs"`
 }
 
@@ -139,7 +143,7 @@ func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) (statusret sy
 		return statusret
 	}
 	logFile, logFiles := getRsyslogFiles(dbname, isbridge)
-	statusret.LogFile = logFile
+	statusret.Data.LogFile = logFile
 
 	if len(logFile) == 0 {
 		statusret.Status = "1"
@@ -165,7 +169,7 @@ func getBridgeTxhash4Rsyslog(dbname, txhash string, isbridge bool) (statusret sy
 		statusret.Status = "1"
 		statusret.Msg = fmt.Sprintf("txhash '%v' not found in log '%v'", txhash, strings.ToUpper(dbname))
 	}
-	statusret.Logs = logRet
+	statusret.Data.Logs = logRet
 	return statusret
 }
 
