@@ -328,6 +328,9 @@ func UpdateRouterDbname_0(dbname string) string {
 	if dbname == "Router-1029_#0" {
 		return "Router-2_#0"
 	}
+	if dbname == "Router-0715_#0" {
+		return "Router_#0"
+	}
 	if dbname == "foreignETH2Fantom" {
 		return "FORETH2Fantom"
 	}
@@ -344,6 +347,9 @@ func SetRouterDbname_0(dbname string) string {
 	fmt.Printf("setDbname, dbname: %v\n", dbname)
 	if dbname == "Router-2_#0" {
 		return "Router-1029_#0"
+	}
+	if dbname == "Router_#0" {
+		return "Router-0715_#0"
 	}
 	if dbname == "FORETH2Fantom" {
 		return "foreignETH2Fantom"
