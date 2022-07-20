@@ -150,7 +150,8 @@ func UpdateRouterSwapInfoAndStatus(fromChainID, txid string, logindex int, swapI
 func FindRouterSwap(fromChainID, txid string, logindex int) (*MgoSwap, error) {
 	key := GetRouterSwapKey(fromChainID, txid, logindex)
 	result := &MgoSwap{}
-	err := collRouterSwap.FindOne(clientCtx, bson.M{"_id": key}).Decode(result)
+	qtxid := bson.M{"_id": bson.M{"$regex": primitive.Regex{Pattern: key, Options: "i"}}}
+	err := collRouterSwap.FindOne(clientCtx, qtxid).Decode(result)
 	if err != nil {
 		return nil, mgoError(err)
 	}
@@ -408,7 +409,8 @@ func FindBridgeSwapResult(dbname, txid string) (*MgoBridgeSwapResult, error) {
 	c := database.Collection(tablename)
 
 	result := &MgoBridgeSwapResult{}
-	err = c.FindOne(clientCtx, bson.M{"txid": txid}).Decode(result)
+	qtxid := bson.M{"txid": bson.M{"$regex": primitive.Regex{Pattern: txid, Options: "i"}}}
+	err = c.FindOne(clientCtx, qtxid).Decode(result)
 	if err != nil {
 		tablename := tbSwapoutResults
 		database := client.Database(dbname)
@@ -443,7 +445,8 @@ func FindBridgeSwap(dbname, txid string) (*MgoBridgeSwap, error) {
 	c := database.Collection(tablename)
 
 	result := &MgoBridgeSwap{}
-	err = c.FindOne(clientCtx, bson.M{"txid": txid}).Decode(result)
+	qtxid := bson.M{"txid": bson.M{"$regex": primitive.Regex{Pattern: txid, Options: "i"}}}
+	err = c.FindOne(clientCtx, qtxid).Decode(result)
 	if err != nil {
 		tablename := tbSwapouts
 		database := client.Database(dbname)
@@ -460,7 +463,8 @@ func FindBridgeSwap(dbname, txid string) (*MgoBridgeSwap, error) {
 func FindRouterSwapResult(fromChainID, txid string, logindex int) (*MgoSwapResult, error) {
 	key := GetRouterSwapKey(fromChainID, txid, logindex)
 	result := &MgoSwapResult{}
-	err := collRouterSwapResult.FindOne(clientCtx, bson.M{"_id": key}).Decode(result)
+	qtxid := bson.M{"_id": bson.M{"$regex": primitive.Regex{Pattern: key, Options: "i"}}}
+	err := collRouterSwapResult.FindOne(clientCtx, qtxid).Decode(result)
 	if err != nil {
 		return nil, mgoError(err)
 	}
