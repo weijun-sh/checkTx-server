@@ -252,7 +252,8 @@ func GetMinersAddress(client *ethclient.Client, contract string) ([]*string, err
 }
 
 func GetRouterAddress(client *ethclient.Client, chainid, to, token string) (string, error) {
-	for router, dbname := range params.Routers {
+	dbnames := params.GetRouterDbName()
+	for router, dbname := range dbnames {
 		var isnevm bool
 		if strings.Contains(strings.ToLower(*dbname), "-nevm") {
 			isnevm = true

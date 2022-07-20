@@ -68,8 +68,7 @@ func GetStatusInfo(args *RPCQueryHistoryArgs, result *ResultStatus, isrouter boo
 		if isrouter {
 			dbnames := params.GetRouterDbName()
 		        for _, dbname := range dbnames {
-				fmt.Printf("dbname: %v\n", dbname)
-		                getStatusInfo(dbname, status, result)
+		                getStatusInfo(*dbname, status, result)
 		        }
 		} else {
 			dbnames := params.GetBridgeDbName()
@@ -85,7 +84,7 @@ func GetStatusInfo(args *RPCQueryHistoryArgs, result *ResultStatus, isrouter boo
 }
 
 func getStatusInfo(dbname, status string, result *ResultStatus) {
-	fmt.Printf("\nfind dbname: %v\n", dbname)
+	fmt.Printf("getStatusInfo, dbname: %v\n", dbname)
 	res, err := swapapi.GetStatusInfo(dbname, status)
 	if err == nil && len(res) != 0 {
 		var s GetStatusInfoResult
@@ -96,7 +95,7 @@ func getStatusInfo(dbname, status string, result *ResultStatus) {
 }
 
 func getBridgeStatusInfo(dbname, status string, result *ResultStatus) {
-	fmt.Printf("\nfind dbname: %v\n", dbname)
+	fmt.Printf("getBridgeStatusInfo, dbname: %v\n", dbname)
 	res, err := swapapi.GetBridgeStatusInfo(dbname, status)
 	if err == nil && len(res) != 0 {
 		var s GetStatusInfoResult
@@ -126,7 +125,7 @@ func (s *RPCAPI) GetSwapHistory(r *http.Request, args *RPCQueryHistoryArgs, resu
 	if dbname == "all" {
 		dbnames := params.GetRouterDbName()
 		for _, dbname := range dbnames {
-			getSwapHistory(dbname, status, result)
+			getSwapHistory(*dbname, status, result)
 		}
 	} else {
 		dbname = params.SetRouterDbname_0(dbname)
@@ -136,7 +135,7 @@ func (s *RPCAPI) GetSwapHistory(r *http.Request, args *RPCQueryHistoryArgs, resu
 }
 
 func getSwapHistory(dbname, statuses string, result *ResultHistorySwap) {
-	fmt.Printf("\nfind dbname: %v\n", dbname)
+	fmt.Printf("getSwapHistory, dbname: %v\n", dbname)
 	parts := strings.Split(statuses, ",")
 	var s []interface{} = make([]interface{}, 0)
 	var getH bool
@@ -331,7 +330,7 @@ func getSwapAlldb(chainid, txid string) (dbname *string, swaptx interface{}, isb
 		}
 	}
 	if !isbridge {
-		dbnames := params.GetRouterDbName()
+		dbnames := params.GetRouterAllDbName()
 		for _, name := range dbnames {
 			fmt.Printf("dbname: %v\n", name)
 			datab, err := swapapi.GetRouterSwap(name, chainid, txid, "0")
@@ -410,7 +409,7 @@ func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbnameFound *st
 	txid := args.TxID
 	dbnames := params.GetBridgeNevmDbName(chainid)
 	for _, dbname := range dbnames {
-		fmt.Printf("find dbname: %v\n", dbname)
+		fmt.Printf("getNevmChainSwap, bridge dbname: %v\n", dbname)
 		res, err := swapapi.GetBridgeSwap(dbname, chainid, txid)
 		if err == nil && res != nil {
 			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
@@ -425,17 +424,17 @@ func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbnameFound *st
 	}
 	if dbnameFound == nil {
 		chainid := getRouterStubChainID(chainid)
-		dbnames = params.GetRouterDbName()
-		for _, dbname := range dbnames {
-			fmt.Printf("find dbname: %v\n", dbname)
-			res, err := swapapi.GetRouterSwap(dbname, chainid, txid, args.LogIndex)
+		dbnamer := params.GetRouterDbName()
+		for _, dbname := range dbnamer {
+			fmt.Printf("getNevmChainSwap router dbname: %v\n", *dbname)
+			res, err := swapapi.GetRouterSwap(*dbname, chainid, txid, args.LogIndex)
 			if err == nil && res != nil {
 				var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
-				nametmp := params.UpdateRouterDbname_0(dbname)
+				nametmp := params.UpdateRouterDbname_0(*dbname)
 				bridgeData[nametmp] = res
 				swaptx = res
 				data = append(data, bridgeData)
-				dbnameFound = &dbname
+				dbnameFound = dbname
 				isbridge = false
 				break
 			}
@@ -521,7 +520,7 @@ func (s *RPCAPI) GetSwapinHistory(r *http.Request, args *RPCQueryHistoryArgs, re
 }
 
 func getBridgeSwapHistory(dbname, statuses string, result *ResultHistorySwap, isSwapin bool) error {
-	fmt.Printf("\nfind dbname: %v\n", dbname)
+	fmt.Printf("getBridgeSwapHistory, dbname: %v\n", dbname)
 	parts := strings.Split(statuses, ",")
 	var s []interface{} = make([]interface{}, 0)
 	var getH bool

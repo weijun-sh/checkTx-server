@@ -23,8 +23,8 @@ var (
 
 	serverDbName map[string]string = make(map[string]string) // dbname -> Identifier
 	addressName map[string]*string = make(map[string]*string) // address -> dbname
-	Routers map[string]*string = make(map[string]*string) // address -> dbname
-	routerDbName []string
+	Routers map[string]*string = make(map[string]*string) // address -> dbname, valid
+	routerDbName []string // all
 	bridgeDbName []string
 	bridgeNevmDbName map[string][]string = make(map[string][]string)
 )
@@ -247,10 +247,12 @@ func initServerDbName() {
 		for address, name := range config.Routers {
 			serverDbName[*name] = config.Identifier
 			addressName[strings.ToLower(address)] = name
-			Routers[strings.ToLower(address)] = name
+			routerDbName = append(routerDbName, *name)
 			if dbnameStore[*name] == nil {
 				dbnameStore[*name] = name
-				routerDbName = append(routerDbName, *name)
+				if !strings.Contains(strings.ToLower(address), "invalid") {
+					Routers[strings.ToLower(address)] = name
+				}
 			}
 			//fmt.Printf("initServerDbName, addressName[%v] = %v\n", strings.ToLower(address), *name)
 		}
@@ -278,8 +280,12 @@ func GetDbName4Config(address string) *string {
 	return addressName[strings.ToLower(address)]
 }
 
-func GetRouterDbName() []string {
+func GetRouterAllDbName() []string {
 	return routerDbName
+}
+
+func GetRouterDbName() map[string]*string {
+	return Routers
 }
 
 func GetBridgeDbName() []string {
