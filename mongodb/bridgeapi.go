@@ -306,6 +306,63 @@ func FindSwapinResults(dbname, address, pairID string, offset, limit int, status
 	return findBridgeSwapResults(c, address, pairID, offset, limit, status)
 }
 
+// FindSwapinResultsWithTime find swapin results history results
+func FindSwapinResultsWithTime(dbname string, daytime uint64, limit int) ([]*MgoBridgeSwapResult, error) {
+	fmt.Printf("FindBridgeSwapResultsWithTime, daytime: %v\n", daytime)
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
+	tablename := tbSwapinResults
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
+	return findBridgeSwapResultWithTime(c, daytime, limit)
+}
+
+// FindSwapoutResultsWithTime find swapin results history results
+func FindSwapoutResultsWithTime(dbname string, daytime uint64, limit int) ([]*MgoBridgeSwapResult, error) {
+	fmt.Printf("FindBridgeSwapoutResultsWithTime, daytime: %v\n", daytime)
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
+	tablename := tbSwapoutResults
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
+	return findBridgeSwapResultWithTime(c, daytime, limit)
+}
+
+// FindSwapResultsWithTime find swap results history results
+func FindSwapResultsWithTime(dbname string, daytime uint64, limit int) ([]*MgoSwapResult, error) {
+	fmt.Printf("FindSwapResultsWithTime, daytime: %v\n", daytime)
+	client, err := params.GetClientByDbName(dbname)
+	if err != nil {
+		return nil, err
+	}
+	tablename := tbRouterSwapResults
+	database := client.Database(dbname)
+	c := database.Collection(tablename)
+	return findSwapResultWithTime(c, daytime, limit)
+}
+
+func findSwapResultWithTime(collection *mongo.Collection, daytime uint64, limit int) ([]*MgoSwapResult, error) {
+	fmt.Printf("findSwapResultsWithTime, daytime: %v\n", daytime)
+	daytime *= 1000 // ms
+	qtime := bson.M{"inittime": bson.M{"$gte": daytime}}
+
+	opts := &options.FindOptions{}
+
+	var cur *mongo.Cursor
+	var err error
+	cur, err = collection.Find(clientCtx, qtime, opts)
+	if err != nil {
+		return nil, mgoError(err)
+	}
+	result := make([]*MgoSwapResult, 0, 20)
+	err = cur.All(clientCtx, &result)
+	return result, mgoError(err)
+}
+
 //// FindSwapResultsToReplace find swap results to replace
 //func FindSwapResultsToReplace(status SwapStatus, septime int64, isSwapin bool) ([]*MgoSwapResult, error) {
 //	qtime := bson.M{"inittime": bson.M{"$gte": septime}}
@@ -620,6 +677,42 @@ func findBridgeSwapResults(collection *mongo.Collection, address, pairID string,
 	default:
 		cur, err = collection.Find(clientCtx, bson.M{"$and": queries}, opts)
 	}
+	if err != nil {
+		return nil, mgoError(err)
+	}
+	result := make([]*MgoBridgeSwapResult, 0, 20)
+	err = cur.All(clientCtx, &result)
+	return result, mgoError(err)
+}
+
+func findBridgeSwapWithTime(collection *mongo.Collection, daytime uint64, limit int) ([]*MgoBridgeSwap, error) {
+	fmt.Printf("findBridgeSwapWithTime, daytime: %v\n", daytime)
+	daytime *= 1000 // ms
+	qtime := bson.M{"inittime": bson.M{"$gte": daytime}}
+
+	opts := &options.FindOptions{}
+
+	var cur *mongo.Cursor
+	var err error
+	cur, err = collection.Find(clientCtx, qtime, opts)
+	if err != nil {
+		return nil, mgoError(err)
+	}
+	result := make([]*MgoBridgeSwap, 0, 20)
+	err = cur.All(clientCtx, &result)
+	return result, mgoError(err)
+}
+
+func findBridgeSwapResultWithTime(collection *mongo.Collection, daytime uint64, limit int) ([]*MgoBridgeSwapResult, error) {
+	fmt.Printf("findBridgeSwapResultsWithTime, daytime: %v\n", daytime)
+	daytime *= 1000 // ms
+	qtime := bson.M{"inittime": bson.M{"$gte": daytime}}
+
+	opts := &options.FindOptions{}
+
+	var cur *mongo.Cursor
+	var err error
+	cur, err = collection.Find(clientCtx, qtime, opts)
 	if err != nil {
 		return nil, mgoError(err)
 	}

@@ -18,6 +18,9 @@ const (
 	RouterSwapPrefixID = "routerswap"
 	RsyslogBridgeSuffix = "-server.log"
 	RsyslogRouterSuffix = "-routerswap.log"
+
+	LimitSwapTime uint64 = 7 // day
+	DayUnixTime uint64 = 24 * 60 *60 // unixtime of 1 day
 )
 
 

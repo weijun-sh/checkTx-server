@@ -69,6 +69,36 @@ func GetStatusInfo(dbname, status string) (map[string]interface{}, error) {
 	return mongodb.GetStatusInfo(dbname, status)
 }
 
+// GetSwapinWithTime api
+func GetSwapinWithTime(dbname string, daytime uint64) ([]*BridgeSwapInfo, error) {
+	fmt.Printf("GetSwapinWithTime, time: %v\n", daytime)
+	result, err := mongodb.FindSwapinResultsWithTime(dbname, daytime, 20)
+	if err != nil {
+		return nil, err
+	}
+	return ConvertMgoBridgeSwapResultsToSwapInfos(result), nil
+}
+
+// GetSwapoutWithTime api
+func GetSwapoutWithTime(dbname string, daytime uint64) ([]*BridgeSwapInfo, error) {
+	fmt.Printf("GetSwapoutWithTime, time: %v\n", daytime)
+	result, err := mongodb.FindSwapoutResultsWithTime(dbname, daytime, 20)
+	if err != nil {
+		return nil, err
+	}
+	return ConvertMgoBridgeSwapResultsToSwapInfos(result), nil
+}
+
+// GetSwapWithTime api
+func GetSwapWithTime(dbname string, daytime uint64) ([]*SwapInfo, error) {
+	fmt.Printf("GetSwapWithTime, time: %v\n", daytime)
+	result, err := mongodb.FindSwapResultsWithTime(dbname, daytime, 20)
+	if err != nil {
+		return nil, err
+	}
+	return ConvertMgoSwapResultsToSwapInfos(result), nil
+}
+
 // GetBridgeStatusInfo api
 func GetBridgeStatusInfo(dbname, status string) (map[string]interface{}, error) {
 	fmt.Printf("GetBridgeStatusInfo, status: %v\n", status)

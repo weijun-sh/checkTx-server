@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	checktxcommon "github.com/weijun-sh/checkTx-server/common"
 	"github.com/weijun-sh/checkTx-server/internal/swapapi"
@@ -41,6 +43,7 @@ type RPCQueryHistoryArgs struct {
         Offset  int    `json:"offset"`
         Limit   int    `json:"limit"`
         Status  string `json:"status"`
+	Timestamp string `json:"timestamp"`
 }
 
 // GetRouterStatusInfo api
@@ -210,7 +213,7 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 			dbname, swaptx, isbridge, data = getChainSwap(r, args)
 		}
 	}
-	if dbname == nil {
+	if dbname == nil || len(data) == 0 {
 		// error return
 		fmt.Printf("GetSwap, txHash: %v not found\n", args.TxID)
 		result.Code = 1
@@ -573,5 +576,129 @@ func (s *RPCAPI) GetSwapoutHistory(r *http.Request, args *RPCQueryHistoryArgs, r
 		getBridgeSwapHistory(dbname, status, result, false)
 	}
 	return nil
+}
+
+// GetSwapReview api
+func (s *RPCAPI) GetSwapReview(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistorySwap) error {
+	fmt.Printf("[rpcapi]GetSwapReview, args: %v\n", args)
+	return getSwapReview(r, args, result)
+}
+
+func getSwapReview(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistorySwap) error {
+	daytime, err := getReviewTime(args.Timestamp)
+	if err != nil {
+		result.Code = 1
+		result.Msg = "timestamp format err"
+		return err
+	}
+
+	result.Code = 0
+	result.Msg = ""
+	result.Data = make(map[string][]interface{}, 0)
+	dbname := args.Bridge
+	if dbname == "all" {
+		dbnames := params.GetRouterDbName()
+		for _, dbname := range dbnames {
+			getSwapWithTime(*dbname, daytime, result)
+		}
+	} else {
+		getSwapWithTime(dbname, daytime, result)
+	}
+	return nil
+}
+
+// GetSwapinReview api
+func (s *RPCAPI) GetSwapinReview(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistorySwap) error {
+	fmt.Printf("[rpcapi]GetSwapinReview, args: %v\n", args)
+	return getBridgeSwapReview(r, args, result, true)
+}
+
+// GetSwapoutReview api
+func (s *RPCAPI) GetSwapoutReview(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistorySwap) error {
+	fmt.Printf("[rpcapi]GetSwapoutReview, args: %v\n", args)
+	return getBridgeSwapReview(r, args, result, false)
+}
+
+func getReviewTime(argtime string) (uint64, error) {
+	now := time.Now().Unix()
+	daytime := uint64(now) - params.DayUnixTime * params.LimitSwapTime
+	if argtime != "" {
+		timestamp, err := strconv.Atoi(argtime)
+		if err != nil {
+			return 0, errors.New("timestamp format err")
+		}
+		if uint64(timestamp) > daytime {
+			daytime = uint64(timestamp)
+		}
+		fmt.Printf("getReviewTime, daytime: %v, timestamp: %v\n", daytime, timestamp)
+	}
+	return daytime, nil
+}
+
+func getBridgeSwapReview(r *http.Request, args *RPCQueryHistoryArgs, result *ResultHistorySwap, isSwapin bool) error {
+	daytime, err := getReviewTime(args.Timestamp)
+	if err != nil {
+		result.Code = 1
+		result.Msg = "timestamp format err"
+		return err
+	}
+
+	result.Code = 0
+	result.Msg = ""
+	result.Data = make(map[string][]interface{}, 0)
+	dbname := args.Bridge
+	if dbname == "all" {
+		dbnames := params.GetBridgeDbName()
+		for _, dbname := range dbnames {
+			if isSwapin {
+				getSwapinWithTime(dbname, daytime, result)
+			} else {
+				getSwapoutWithTime(dbname, daytime, result)
+			}
+		}
+	} else {
+		if isSwapin {
+			getSwapinWithTime(dbname, daytime, result)
+		} else {
+			getSwapoutWithTime(dbname, daytime, result)
+		}
+	}
+	return nil
+}
+
+// getSwapinWithTime get swap from time limit
+func getSwapinWithTime(dbname string, daytime uint64, result *ResultHistorySwap) {
+	fmt.Printf("getSwapinWithTime, dbname: %v, daytime: %v\n", dbname, daytime)
+	res, err := swapapi.GetSwapinWithTime(dbname, daytime)
+	if err == nil && len(res) != 0 {
+		dbname = params.UpdateRouterDbname_0(dbname)
+		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+		bridgeData[dbname] = &res
+		result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
+	}
+}
+
+// getSwapoutWithTime get swap from time limit
+func getSwapoutWithTime(dbname string, daytime uint64, result *ResultHistorySwap) {
+	fmt.Printf("getSwapoutWithTime, dbname: %v, daytime: %v\n", dbname, daytime)
+	res, err := swapapi.GetSwapoutWithTime(dbname, daytime)
+	if err == nil && len(res) != 0 {
+		dbname = params.UpdateRouterDbname_0(dbname)
+		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+		bridgeData[dbname] = &res
+		result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
+	}
+}
+
+// getSwapWithTime get swap router from time limit
+func getSwapWithTime(dbname string, daytime uint64, result *ResultHistorySwap) {
+	fmt.Printf("getSwapWithTime, dbname: %v, daytime: %v\n", dbname, daytime)
+	res, err := swapapi.GetSwapWithTime(dbname, daytime)
+	if err == nil && len(res) != 0 {
+		dbname = params.UpdateRouterDbname_0(dbname)
+		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+		bridgeData[dbname] = &res
+		result.Data["router"] = append(result.Data["router"], bridgeData)
+	}
 }
 
