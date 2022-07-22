@@ -672,6 +672,9 @@ func getSwapinWithTime(dbname string, daytime uint64, result *ResultHistorySwap)
 	if err == nil && len(res) != 0 {
 		dbname = params.UpdateRouterDbname_0(dbname)
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+		for _, st := range res {
+			addBridgeChainID(dbname, st)
+		}
 		bridgeData[dbname] = &res
 		result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
 	}
@@ -684,6 +687,9 @@ func getSwapoutWithTime(dbname string, daytime uint64, result *ResultHistorySwap
 	if err == nil && len(res) != 0 {
 		dbname = params.UpdateRouterDbname_0(dbname)
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+		for _, st := range res {
+			addBridgeChainID(dbname, st)
+		}
 		bridgeData[dbname] = &res
 		result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
 	}
