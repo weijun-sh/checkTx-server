@@ -66,12 +66,14 @@ func GetOracleInfo() map[string]*OracleInfo {
 // GetStatusInfo api
 func GetStatusInfo(dbname, status string) (map[string]interface{}, error) {
 	fmt.Printf("GetStatusInfo, status: %v\n", status)
+	dbname = params.GetRealDbName(dbname)
 	return mongodb.GetStatusInfo(dbname, status)
 }
 
 // GetSwapinWithTime api
 func GetSwapinWithTime(dbname string, daytime uint64) ([]*BridgeSwapInfo, error) {
-	fmt.Printf("GetSwapinWithTime, time: %v\n", daytime)
+	dbname = params.GetRealDbName(dbname)
+	fmt.Printf("GetSwapinWithTime, dbname: %v\n", dbname)
 	result, err := mongodb.FindSwapinResultsWithTime(dbname, daytime, 20)
 	if err != nil {
 		return nil, err
@@ -81,7 +83,8 @@ func GetSwapinWithTime(dbname string, daytime uint64) ([]*BridgeSwapInfo, error)
 
 // GetSwapoutWithTime api
 func GetSwapoutWithTime(dbname string, daytime uint64) ([]*BridgeSwapInfo, error) {
-	fmt.Printf("GetSwapoutWithTime, time: %v\n", daytime)
+	dbname = params.GetRealDbName(dbname)
+	fmt.Printf("GetSwapoutWithTime, dbname: %v\n", dbname)
 	result, err := mongodb.FindSwapoutResultsWithTime(dbname, daytime, 20)
 	if err != nil {
 		return nil, err
@@ -91,7 +94,8 @@ func GetSwapoutWithTime(dbname string, daytime uint64) ([]*BridgeSwapInfo, error
 
 // GetSwapWithTime api
 func GetSwapWithTime(dbname string, daytime uint64) ([]*SwapInfo, error) {
-	fmt.Printf("GetSwapWithTime, time: %v\n", daytime)
+	dbname = params.GetRealDbName(dbname)
+	fmt.Printf("GetSwapWithTime, dbname: %v\n", dbname)
 	result, err := mongodb.FindSwapResultsWithTime(dbname, daytime, 20)
 	if err != nil {
 		return nil, err
@@ -101,6 +105,7 @@ func GetSwapWithTime(dbname string, daytime uint64) ([]*SwapInfo, error) {
 
 // GetBridgeStatusInfo api
 func GetBridgeStatusInfo(dbname, status string) (map[string]interface{}, error) {
+	dbname = params.GetRealDbName(dbname)
 	fmt.Printf("GetBridgeStatusInfo, status: %v\n", status)
 	return mongodb.GetBridgeStatusInfo(dbname, status)
 }
@@ -257,6 +262,7 @@ func getLogIndex(logindexStr string) (int, error) {
 }
 
 func GetBridgeSwap(dbname, fromChainID, txid string) (*BridgeSwapInfo, error) {
+	dbname = params.GetRealDbName(dbname)
 	result, err := mongodb.FindBridgeSwapResultAuto(dbname, txid)
 	//fmt.Printf("mongodb.FindSwapResultAuto, result: %v, err: %v\n", result, err)
 	if err == nil {
@@ -271,6 +277,7 @@ func GetBridgeSwap(dbname, fromChainID, txid string) (*BridgeSwapInfo, error) {
 
 // GetRouterSwap impl
 func GetRouterSwap(dbname, fromChainID, txid, logindexStr string) (*SwapInfo, error) {
+	dbname = params.GetRealDbName(dbname)
 	logindex, err := getLogIndex(logindexStr)
 	if err != nil {
 		return nil, err
@@ -288,6 +295,7 @@ func GetRouterSwap(dbname, fromChainID, txid, logindexStr string) (*SwapInfo, er
 
 // GetRouterSwapHistory impl
 func GetRouterSwapHistory(dbname, fromChainID, address string, offset, limit int, status string) ([]*SwapInfo, error) {
+	dbname = params.GetRealDbName(dbname)
         limit = processHistoryLimit(limit)
 	result, err := mongodb.FindRouterSwapResults(dbname, fromChainID, address, offset, limit, status)
 	if err != nil {
@@ -310,6 +318,7 @@ func processHistoryLimit(limit int) int {
 }
 // GetSwapinHistory api
 func GetSwapinHistory(dbname, address, pairID string, offset, limit int, status string) ([]*BridgeSwapInfo, error) {
+	dbname = params.GetRealDbName(dbname)
         log.Debug("[api] receive GetSwapinHistory", "address", address, "pairID", pairID, "offset", offset, "limit", limit, "status", status)
         limit = processHistoryLimit(limit)
         result, err := mongodb.FindSwapinResults(dbname, address, pairID, offset, limit, status)
@@ -321,6 +330,7 @@ func GetSwapinHistory(dbname, address, pairID string, offset, limit int, status 
 
 // GetSwapoutHistory api
 func GetSwapoutHistory(dbname, address, pairID string, offset, limit int, status string) ([]*BridgeSwapInfo, error) {
+	dbname = params.GetRealDbName(dbname)
         log.Debug("[api] receive GetSwapoutHistory", "address", address, "pairID", pairID, "offset", offset, "limit", limit)
         limit = processHistoryLimit(limit)
         result, err := mongodb.FindSwapoutResults(dbname, address, pairID, offset, limit, status)

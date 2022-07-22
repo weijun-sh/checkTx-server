@@ -346,7 +346,7 @@ func FindSwapResultsWithTime(dbname string, daytime uint64, limit int) ([]*MgoSw
 }
 
 func findSwapResultWithTime(collection *mongo.Collection, daytime uint64, limit int) ([]*MgoSwapResult, error) {
-	fmt.Printf("findSwapResultsWithTime, daytime: %v\n", daytime)
+	//fmt.Printf("findSwapResultsWithTime, daytime: %v\n", daytime)
 	daytime *= 1000 // ms
 	qtime := bson.M{"inittime": bson.M{"$gte": daytime}}
 

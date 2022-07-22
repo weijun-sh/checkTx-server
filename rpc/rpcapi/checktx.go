@@ -245,7 +245,6 @@ func (s *RPCAPI) GetSwap(r *http.Request, args *RouterSwapKeyArgs, result *Resul
 	}()
 
 	wg.Wait()
-	fmt.Printf("[rpcapi]GetSwap finished, args: %v\n", args)
 	return nil
 }
 

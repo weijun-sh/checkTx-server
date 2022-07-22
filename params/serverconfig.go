@@ -27,6 +27,7 @@ var (
 	routerDbName []string // all
 	bridgeDbName []string
 	bridgeNevmDbName map[string][]string = make(map[string][]string)
+	realDbName map[string]string = make(map[string]string)
 )
 
 var (
@@ -245,24 +246,28 @@ func initServerDbName() {
 	var dbnameStore map[string]*string = make(map[string]*string)
 	for _, config := range serverDbConfig {
 		for address, name := range config.Routers {
-			serverDbName[*name] = config.Identifier
+			nametmp := strings.ToLower(*name)
+			serverDbName[nametmp] = config.Identifier
 			addressName[strings.ToLower(address)] = name
-			routerDbName = append(routerDbName, *name)
-			if dbnameStore[*name] == nil {
-				dbnameStore[*name] = name
+			routerDbName = append(routerDbName, nametmp)
+			if dbnameStore[nametmp] == nil {
+				dbnameStore[nametmp] = name
 				if !strings.Contains(strings.ToLower(address), "invalid") {
 					Routers[strings.ToLower(address)] = name
+					realDbName[nametmp] = *name
 				}
 			}
 			//fmt.Printf("initServerDbName, addressName[%v] = %v\n", strings.ToLower(address), *name)
 		}
 		for address, name := range config.Bridges {
-			serverDbName[*name] = config.Identifier
+			nametmp := strings.ToLower(*name)
+			serverDbName[nametmp] = config.Identifier
 			addressName[strings.ToLower(address)] = name
-			if dbnameStore[*name] == nil {
-				dbnameStore[*name] = name
+			if dbnameStore[nametmp] == nil {
+				dbnameStore[nametmp] = name
 				bridgeDbName = append(bridgeDbName, *name)
 				initNevmDbName(*name)
+				realDbName[nametmp] = *name
 			}
 		}
 	}
@@ -301,7 +306,7 @@ func IsNevmChain(btc string) bool {
 }
 
 func GetClientByDbName(name string) (*mongo.Client, error) {
-	Identifier := serverDbName[name]
+	Identifier := serverDbName[strings.ToLower(name)]
 	if Identifier != "" {
 		client := serverDbClient[Identifier]
 		if client == nil {
@@ -312,8 +317,18 @@ func GetClientByDbName(name string) (*mongo.Client, error) {
 	return nil, fmt.Errorf("identifier is nil")
 }
 
+func GetRealDbName(name string) string {
+	nametmp := strings.ToLower(name)
+	if realDbName[nametmp] == "" {
+		fmt.Printf("getRealDbName, dbname '%v' not exist\n", name)
+		return name
+	}
+	//fmt.Printf("GetRealDbName, realDbName: %v\n", realDbName[nametmp])
+	return realDbName[nametmp]
+}
+
 func GetRsyslogDir(dbname string) string {
-	Identifier := serverDbName[dbname]
+	Identifier := serverDbName[strings.ToLower(dbname)]
 	config := serverDbConfig[Identifier]
 	if config == nil {
 		return ""
@@ -322,7 +337,7 @@ func GetRsyslogDir(dbname string) string {
 }
 
 func GetLogsMaxLines(dbname string) uint64 {
-	Identifier := serverDbName[dbname]
+	Identifier := serverDbName[strings.ToLower(dbname)]
 	config := serverDbConfig[Identifier]
 	if config == nil {
 		return 0
@@ -331,39 +346,41 @@ func GetLogsMaxLines(dbname string) uint64 {
 }
 
 func UpdateRouterDbname_0(dbname string) string {
-	if dbname == "Router-1029_#0" {
+	dbname = GetRealDbName(dbname)
+	if strings.EqualFold(dbname, "Router-1029_#0") {
 		return "Router-2_#0"
 	}
-	if dbname == "Router-0715_#0" {
+	if strings.EqualFold(dbname, "Router-0715_#0") {
 		return "Router_#0"
 	}
-	if dbname == "foreignETH2Fantom" {
+	if strings.EqualFold(dbname, "foreignETH2Fantom") {
 		return "FORETH2Fantom"
 	}
-	if dbname == "foreignETH2BSC" {
+	if strings.EqualFold(dbname, "foreignETH2BSC") {
 		return "FORETH2BSC"
 	}
-	if dbname == "USDT-alone" {
+	if strings.EqualFold(dbname, "USDT-alone") {
 		return "USDT2Fantom"
 	}
 	return dbname
 }
 
 func SetRouterDbname_0(dbname string) string {
+	dbname = GetRealDbName(dbname)
 	fmt.Printf("setDbname, dbname: %v\n", dbname)
-	if dbname == "Router-2_#0" {
+	if strings.EqualFold(dbname, "Router-2_#0") {
 		return "Router-1029_#0"
 	}
-	if dbname == "Router_#0" {
+	if strings.EqualFold(dbname, "Router_#0") {
 		return "Router-0715_#0"
 	}
-	if dbname == "FORETH2Fantom" {
+	if strings.EqualFold(dbname, "FORETH2Fantom") {
 		return "foreignETH2Fantom"
 	}
-	if dbname == "FORETH2BSC" {
+	if strings.EqualFold(dbname, "FORETH2BSC") {
 		return "foreignETH2BSC"
 	}
-	if dbname == "USDT2Fantom" {
+	if strings.EqualFold(dbname, "USDT2Fantom") {
 		return "USDT-alone"
 	}
 	return dbname
