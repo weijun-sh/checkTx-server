@@ -323,6 +323,7 @@ func getSwapAlldb(chainid, txid string) (dbname *string, swaptx interface{}, isb
 		datab, err := swapapi.GetBridgeSwap(name, chainid, txid)
 		if err == nil {
 			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+			addBridgeChainID(name, datab)
 			bridgeData[name] = datab
 			isbridge = true
 			dbname = &name
