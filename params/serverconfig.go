@@ -60,6 +60,7 @@ type MongoDBConfig struct {
 func InitServerDbConfig() {
 	LoadServerDbConfig(true)
 	initServerDbName()
+	initRouterChainID()
 }
 
 // SetServerDbConfigDir set server db config directory

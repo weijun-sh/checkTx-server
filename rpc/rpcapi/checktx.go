@@ -425,7 +425,7 @@ func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbnameFound *st
 		}
 	}
 	if dbnameFound == nil {
-		chainid := getRouterStubChainID(chainid)
+		chainid := params.GetRouterStubChainID(chainid)
 		dbnamer := params.GetRouterDbName()
 		for _, dbname := range dbnamer {
 			fmt.Printf("getNevmChainSwap router dbname: %v\n", *dbname)
@@ -702,8 +702,18 @@ func getSwapWithTime(dbname string, daytime uint64, result *ResultHistorySwap) {
 	if err == nil && len(res) != 0 {
 		dbname = params.UpdateRouterDbname_0(dbname)
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
+		for _, st := range res {
+			updateRouterChainID(st)
+		}
 		bridgeData[dbname] = &res
 		result.Data["router"] = append(result.Data["router"], bridgeData)
 	}
+}
+
+func updateRouterChainID(st *swapapi.SwapInfo) {
+	fromChainid := params.GetRouterChainIDStub(st.FromChainID)
+	toChainid := params.GetRouterChainIDStub(st.ToChainID)
+	st.FromChainID = fromChainid
+	st.ToChainID = toChainid
 }
 

@@ -5,7 +5,6 @@ import (
 
 	"github.com/weijun-sh/checkTx-server/params"
 	"github.com/weijun-sh/checkTx-server/mongodb"
-	//"github.com/weijun-sh/checkTx-server/router/bridge"
 )
 
 const interval = 10 * time.Millisecond
