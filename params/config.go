@@ -31,7 +31,7 @@ var (
 	routerConfig = &RouterConfig{Extra: &ExtraConfig{}}
 
 	ethClient map[string]*ethclient.Client = make(map[string]*ethclient.Client, 0)
-	EthRpc map[string]*[]string = make(map[string]*[]string, 0)
+	EthRpc map[string][]string = make(map[string][]string, 0)
 	chainName map[string]string = make(map[string]string, 0)
 
 	routerConfigFile string
@@ -1019,8 +1019,11 @@ func CloseClient() {
 }
 func initClient(urls map[string][]string) {
 	for chainid, rpc := range urls {
+		EthRpc[strings.ToLower(chainid)] = rpc
 		ethClient[strings.ToLower(chainid)] = client.InitClient(chainid, rpc[0])
-		EthRpc[strings.ToLower(chainid)] = &rpc
+	}
+	for chainid, rpc := range EthRpc {
+		log.Printf("EthRpc[%v] = %v\n", strings.ToLower(chainid), rpc)
 	}
 }
 
@@ -1069,6 +1072,11 @@ func GetRsyslogSuffix(isbridge bool) string {
 }
 
 func IsSupportChainID(chainid string) bool {
-	return EthRpc[strings.ToLower(chainid)] != nil
+	return len(EthRpc[strings.ToLower(chainid)]) != 0
+}
+
+func GetGateway(chainid string) []string {
+	log.Printf("GetGateway, EthRpc[%v]: %v\n", strings.ToLower(chainid), EthRpc[strings.ToLower(chainid)])
+	return EthRpc[strings.ToLower(chainid)]
 }
 

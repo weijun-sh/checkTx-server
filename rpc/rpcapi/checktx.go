@@ -258,7 +258,7 @@ type swaptxErrConfig struct {
 	ChainID string `json:"toChainID"`
 	TxID string `json:"swaptx"`
 	Timestamp uint64 `json:"timestamp"`
-	Transaction *types.Transaction `json:"transaction"`
+	Transaction interface{} `json:"transaction"`
 }
 
 func getSwaptx(swaptx interface{}, isbridge bool) *swaptxConfig {
@@ -266,19 +266,28 @@ func getSwaptx(swaptx interface{}, isbridge bool) *swaptxConfig {
 	if swaptx == nil {
 		return nil
 	}
-	var (
-		stx swaptxConfig
-		stxret swaptxErrConfig
-	)
-	stx.Data = &stxret
 
 	chainid, txid := getSwaptxInfo(swaptx, isbridge)
-	stxret.ChainID = chainid
 	if len(txid) == 0 {
+		var stx swaptxConfig
 		stx.Status = receiptStatusFailed
 		stx.Msg = fmt.Sprintf("swaptx is nil")
 		return &stx
 	}
+	switch(strings.ToLower(chainid)) {
+	case "btc":
+		return getTransactionStatus(chainid, txid)
+	default:
+		return getEthTransactionStatus(chainid, txid)
+	}
+	return nil
+}
+
+func getEthTransactionStatus(chainid, txid string) *swaptxConfig {
+	var stx swaptxConfig
+	var stxret swaptxErrConfig
+	stx.Data = &stxret
+	stxret.ChainID = chainid
 	stxret.TxID = txid
 	ethclient := params.GetEthClient(chainid)
 	if ethclient == nil || !checktxcommon.IsHexHash(txid) {
