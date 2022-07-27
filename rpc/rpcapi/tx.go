@@ -108,6 +108,11 @@ func getTransactionReceiptTo(client *ethclient.Client, txHash common.Hash) (stri
 		receipt, err := client.TransactionReceipt(context.Background(), txHash)
 		if err == nil {
 			if len(receipt.Logs) == 0 {
+				tx, err := getTransaction(client, txHash)
+				if err == nil {
+					to := tx.To().String()
+					return to, "", swapinTopic, nil
+				}
 				return "", "", 0, errors.New("no receipt")
 			}
 			for _, log := range receipt.Logs {

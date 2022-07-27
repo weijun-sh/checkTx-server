@@ -346,13 +346,13 @@ func GetLogsMaxLines(dbname string) uint64 {
 	return config.Logs.MaxLines
 }
 
-func UpdateRouterDbname_0(dbname string) string {
+func GetMgoRouterDbname_0(dbname string) string {
 	dbname = GetRealDbName(dbname)
-	if strings.EqualFold(dbname, "Router-1029_#0") {
-		return "Router-2_#0"
+	if strings.EqualFold(dbname, "Router-2_#0") {
+		return "Router-1029_#0"
 	}
-	if strings.EqualFold(dbname, "Router-0715_#0") {
-		return "Router_#0"
+	if strings.EqualFold(dbname, "Router_#0") {
+		return "Router-0715_#0"
 	}
 	if strings.EqualFold(dbname, "foreignETH2Fantom") {
 		return "FORETH2Fantom"
@@ -366,14 +366,14 @@ func UpdateRouterDbname_0(dbname string) string {
 	return dbname
 }
 
-func SetRouterDbname_0(dbname string) string {
+func GetLogRouterDbname_0(dbname string) string {
 	dbname = GetRealDbName(dbname)
 	fmt.Printf("setDbname, dbname: %v\n", dbname)
-	if strings.EqualFold(dbname, "Router-2_#0") {
-		return "Router-1029_#0"
+	if strings.EqualFold(dbname, "Router-1029_#0") {
+		return "Router-2_#0"
 	}
-	if strings.EqualFold(dbname, "Router_#0") {
-		return "Router-0715_#0"
+	if strings.EqualFold(dbname, "Router-0715_#0") {
+		return "Router_#0"
 	}
 	if strings.EqualFold(dbname, "FORETH2Fantom") {
 		return "foreignETH2Fantom"

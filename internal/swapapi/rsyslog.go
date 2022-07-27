@@ -73,7 +73,7 @@ func getRsyslogFiles(dbname string, isbridge bool) (fileRet string, fileArray []
 	if err != nil {
 		return fileRet, fileArray
 	}
-	dbname = params.SetRouterDbname_0(dbname)
+	dbname = params.GetLogRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]

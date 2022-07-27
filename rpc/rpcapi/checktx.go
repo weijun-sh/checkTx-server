@@ -80,7 +80,6 @@ func GetStatusInfo(args *RPCQueryHistoryArgs, result *ResultStatus, isrouter boo
 		        }
 		}
 	} else {
-		dbname = params.SetRouterDbname_0(dbname)
 		getStatusInfo(dbname, status, result)
 	}
 	return nil
@@ -92,7 +91,7 @@ func getStatusInfo(dbname, status string, result *ResultStatus) {
 	if err == nil && len(res) != 0 {
 		var s GetStatusInfoResult
 		s = res
-		dbname = params.UpdateRouterDbname_0(dbname)
+		dbname = params.GetLogRouterDbname_0(dbname)
 		result.Data[dbname] = &s
 	}
 }
@@ -131,7 +130,6 @@ func (s *RPCAPI) GetSwapHistory(r *http.Request, args *RPCQueryHistoryArgs, resu
 			getSwapHistory(*dbname, status, result)
 		}
 	} else {
-		dbname = params.SetRouterDbname_0(dbname)
 		getSwapHistory(dbname, status, result)
 	}
 	return nil
@@ -157,7 +155,7 @@ func getSwapHistory(dbname, statuses string, result *ResultHistorySwap) {
 	}
 	if getH {
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
-		nametmp := params.UpdateRouterDbname_0(dbname)
+		nametmp := params.GetLogRouterDbname_0(dbname)
 		bridgeData[nametmp] = &s
 		result.Data["router"] = append(result.Data["router"], bridgeData)
 	}
@@ -361,17 +359,7 @@ func getSwapAlldb(chainid, txid string) (dbname *string, swaptx interface{}, isb
 }
 
 func getChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbname *string, swaptx interface{}, isbridge bool, data []interface{}) {
-	ethclient := params.GetEthClient(args.ChainID)
-	tx, err := getTransaction(ethclient, common.HexToHash(args.TxID))
-	if err == nil {
-		to := tx.To().String()
-		// bridge deposit
-		dbname = getDbname4Config(to)
-		isbridge = true
-		if dbname == nil {
-			dbname, isbridge = getAddress4Contract(args.ChainID, args.TxID)
-		}
-	}
+	dbname, isbridge = getAddress4Contract(args.ChainID, args.TxID)
 	var res interface{}
 	if dbname != nil {
 		var err error
@@ -388,7 +376,7 @@ func getChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbname *string, swa
 		}
 		if err == nil && res != nil {
 			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
-			nametmp := params.UpdateRouterDbname_0(*dbname)
+			nametmp := params.GetLogRouterDbname_0(*dbname)
 			bridgeData[nametmp] = res
 			swaptx = res
 			data = append(data, bridgeData)
@@ -442,7 +430,7 @@ func getNevmChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbnameFound *st
 			res, err := swapapi.GetRouterSwap(*dbname, chainid, txid, args.LogIndex)
 			if err == nil && res != nil {
 				var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
-				nametmp := params.UpdateRouterDbname_0(*dbname)
+				nametmp := params.GetLogRouterDbname_0(*dbname)
 				bridgeData[nametmp] = res
 				swaptx = res
 				data = append(data, bridgeData)
@@ -559,7 +547,8 @@ func getBridgeSwapHistory(dbname, statuses string, result *ResultHistorySwap, is
 	}
 	if getH {
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
-		bridgeData[dbname] = &s
+		nametmp := params.GetLogRouterDbname_0(dbname)
+		bridgeData[nametmp] = &s
 		result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
 	}
         return nil
@@ -680,7 +669,7 @@ func getSwapinWithTime(dbname string, daytime uint64, result *ResultHistorySwap)
 	fmt.Printf("getSwapinWithTime, dbname: %v, daytime: %v\n", dbname, daytime)
 	res, err := swapapi.GetSwapinWithTime(dbname, daytime)
 	if err == nil && len(res) != 0 {
-		dbname = params.UpdateRouterDbname_0(dbname)
+		dbname = params.GetMgoRouterDbname_0(dbname)
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
 		for _, st := range res {
 			addBridgeChainID(dbname, st)
@@ -695,7 +684,7 @@ func getSwapoutWithTime(dbname string, daytime uint64, result *ResultHistorySwap
 	fmt.Printf("getSwapoutWithTime, dbname: %v, daytime: %v\n", dbname, daytime)
 	res, err := swapapi.GetSwapoutWithTime(dbname, daytime)
 	if err == nil && len(res) != 0 {
-		dbname = params.UpdateRouterDbname_0(dbname)
+		dbname = params.GetMgoRouterDbname_0(dbname)
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
 		for _, st := range res {
 			addBridgeChainID(dbname, st)
@@ -710,7 +699,7 @@ func getSwapWithTime(dbname string, daytime uint64, result *ResultHistorySwap) {
 	fmt.Printf("getSwapWithTime, dbname: %v, daytime: %v\n", dbname, daytime)
 	res, err := swapapi.GetSwapWithTime(dbname, daytime)
 	if err == nil && len(res) != 0 {
-		dbname = params.UpdateRouterDbname_0(dbname)
+		dbname = params.GetLogRouterDbname_0(dbname)
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
 		for _, st := range res {
 			updateRouterChainID(st)

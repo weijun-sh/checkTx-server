@@ -55,6 +55,10 @@ func FindSwapResult(isSwapin bool, dbname, txid, pairID, bind string) (*MgoBridg
 	if err != nil {
 		return nil, err
 	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
+	}
 	if isSwapin {
 		tablename := tbSwapinResults
 		database := client.Database(dbname)
@@ -72,6 +76,10 @@ func FindSwap(isSwapin bool, dbname, txid, pairID, bind string) (*MgoBridgeSwap,
 	client, err := params.GetClientByDbName(dbname)
 	if err != nil {
 		return nil, err
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
 	}
 	if isSwapin {
 		tablename := tbSwapins
@@ -300,6 +308,10 @@ func FindSwapinResults(dbname, address, pairID string, offset, limit int, status
 	if err != nil {
 		return nil, err
 	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
+	}
 	tablename := tbSwapinResults
 	database := client.Database(dbname)
 	c := database.Collection(tablename)
@@ -312,6 +324,10 @@ func FindSwapinResultsWithTime(dbname string, daytime uint64, limit int) ([]*Mgo
 	client, err := params.GetClientByDbName(dbname)
 	if err != nil {
 		return nil, err
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
 	}
 	tablename := tbSwapinResults
 	database := client.Database(dbname)
@@ -326,6 +342,10 @@ func FindSwapoutResultsWithTime(dbname string, daytime uint64, limit int) ([]*Mg
 	if err != nil {
 		return nil, err
 	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
+	}
 	tablename := tbSwapoutResults
 	database := client.Database(dbname)
 	c := database.Collection(tablename)
@@ -338,6 +358,10 @@ func FindSwapResultsWithTime(dbname string, daytime uint64, limit int) ([]*MgoSw
 	client, err := params.GetClientByDbName(dbname)
 	if err != nil {
 		return nil, err
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
 	}
 	tablename := tbRouterSwapResults
 	database := client.Database(dbname)
@@ -421,6 +445,10 @@ func FindSwapoutResults(dbname, address, pairID string, offset, limit int, statu
 	client, err := params.GetClientByDbName(dbname)
 	if err != nil {
 		return nil, err
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
 	}
 	tablename := tbSwapoutResults
 	database := client.Database(dbname)
@@ -1020,6 +1048,10 @@ func GetBridgeStatusInfo(dbname, statuses string) (map[string]interface{}, error
 	client, err := params.GetClientByDbName(dbname)
 	if err != nil {
 		return nil, err
+	}
+	if strings.HasSuffix(dbname, "_#0") {
+		slice := strings.Split(dbname, "_#0")
+		dbname = slice[0]
 	}
 	filterStatuses := getBridgeStatusesFromStr(statuses)
 	if len(filterStatuses) == 0 {
