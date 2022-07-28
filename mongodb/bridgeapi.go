@@ -55,6 +55,7 @@ func FindSwapResult(isSwapin bool, dbname, txid, pairID, bind string) (*MgoBridg
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -77,6 +78,7 @@ func FindSwap(isSwapin bool, dbname, txid, pairID, bind string) (*MgoBridgeSwap,
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -308,6 +310,7 @@ func FindSwapinResults(dbname, address, pairID string, offset, limit int, status
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -325,6 +328,7 @@ func FindSwapinResultsWithTime(dbname string, daytime uint64, limit int) ([]*Mgo
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -342,6 +346,7 @@ func FindSwapoutResultsWithTime(dbname string, daytime uint64, limit int) ([]*Mg
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -359,6 +364,7 @@ func FindSwapResultsWithTime(dbname string, daytime uint64, limit int) ([]*MgoSw
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -446,6 +452,7 @@ func FindSwapoutResults(dbname, address, pairID string, offset, limit int, statu
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -1049,6 +1056,7 @@ func GetBridgeStatusInfo(dbname, statuses string) (map[string]interface{}, error
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]

@@ -171,6 +171,7 @@ func findFirstRouterSwap(dbname, fromChainID, txid string) (*MgoSwap, error) {
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -400,6 +401,7 @@ func FindBridgeSwapResult(dbname, txid string) (*MgoBridgeSwapResult, error) {
 		fmt.Printf("FindBridgeSwapResult, err: %v\n", err)
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -436,6 +438,7 @@ func FindBridgeSwap(dbname, txid string) (*MgoBridgeSwap, error) {
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -485,6 +488,7 @@ func findFirstRouterSwapResult(dbname, fromChainID, txid string) (*MgoSwapResult
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -635,6 +639,7 @@ func FindRouterSwapResults(dbname, fromChainID, address string, offset, limit in
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
@@ -958,6 +963,7 @@ func getStatusInfo(dbname, tablename string, filterStatuses []SwapStatus) (resul
 	if err != nil {
 		return nil, err
 	}
+	dbname = params.GetMgoRouterDbname_0(dbname)
 	if strings.HasSuffix(dbname, "_#0") {
 		slice := strings.Split(dbname, "_#0")
 		dbname = slice[0]
