@@ -331,7 +331,8 @@ func getSwapAlldb(chainid, txid string) (dbname *string, swaptx interface{}, isb
 		if err == nil {
 			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
 			addBridgeChainID(name, datab)
-			bridgeData[name] = datab
+			nametmp := params.GetLogRouterDbname_0(name)
+			bridgeData[nametmp] = datab
 			isbridge = true
 			dbname = &name
 			data = append(data, bridgeData)
@@ -346,7 +347,8 @@ func getSwapAlldb(chainid, txid string) (dbname *string, swaptx interface{}, isb
 			datab, err := swapapi.GetRouterSwap(name, chainid, txid, "0")
 			if err == nil {
 				var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
-				bridgeData[name] = datab
+				nametmp := params.GetLogRouterDbname_0(name)
+				bridgeData[nametmp] = datab
 				isbridge = false
 				dbname = &name
 				data = append(data, bridgeData)

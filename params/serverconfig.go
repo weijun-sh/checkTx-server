@@ -253,9 +253,9 @@ func initServerDbName() {
 			routerDbName = append(routerDbName, nametmp)
 			if dbnameStore[nametmp] == nil {
 				dbnameStore[nametmp] = name
-				if !strings.Contains(strings.ToLower(address), "invalid") {
+				realDbName[nametmp] = *name
+				if !strings.Contains(strings.ToLower(address), "discard") {
 					Routers[strings.ToLower(address)] = name
-					realDbName[nametmp] = *name
 				}
 			}
 			//fmt.Printf("initServerDbName, addressName[%v] = %v\n", strings.ToLower(address), *name)
@@ -354,6 +354,9 @@ func GetMgoRouterDbname_0(dbname string) string {
 	if strings.EqualFold(dbname, "Router_#0") {
 		return "Router-0715_#0"
 	}
+	if strings.EqualFold(dbname, "Router-discard_#0") {
+		return "Router_#0"
+	}
 	if strings.EqualFold(dbname, "foreignETH2Fantom") {
 		return "FORETH2Fantom"
 	}
@@ -377,6 +380,9 @@ func GetLogRouterDbname_0(dbname string) string {
 	}
 	if strings.EqualFold(dbname, "Router-0715_#0") {
 		return "Router_#0"
+	}
+	if strings.EqualFold(dbname, "Router_#0") {
+		return "Router-invalid_#0"
 	}
 	if strings.EqualFold(dbname, "FORETH2Fantom") {
 		return "foreignETH2Fantom"
