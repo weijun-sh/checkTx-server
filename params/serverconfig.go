@@ -256,6 +256,7 @@ func initServerDbName() {
 				realDbName[nametmp] = *name
 				if !strings.Contains(strings.ToLower(address), "discard") {
 					Routers[strings.ToLower(address)] = name
+					//fmt.Printf("Routers, Routers[%v] = %v\n", strings.ToLower(address), *(Routers[strings.ToLower(address)]))
 				}
 			}
 			//fmt.Printf("initServerDbName, addressName[%v] = %v\n", strings.ToLower(address), *name)
@@ -348,26 +349,39 @@ func GetLogsMaxLines(dbname string) uint64 {
 
 func GetMgoRouterDbname_0(dbname string) string {
 	dbname = GetRealDbName(dbname)
-	if strings.EqualFold(dbname, "Router-2_#0") {
+	switch(dbname) {
+	case "Router-2_#0":
 		return "Router-1029_#0"
-	}
-	if strings.EqualFold(dbname, "Router_#0") {
+	case "Router_#0":
 		return "Router-0715_#0"
-	}
-	if strings.EqualFold(dbname, "Router-discard_#0") {
+	case "Router-discard_#0":
 		return "Router_#0"
-	}
-	if strings.EqualFold(dbname, "foreignETH2Fantom") {
+	case "foreignETH2Fantom":
 		return "FORETH2Fantom"
-	}
-	if strings.EqualFold(dbname, "foreignETH2BSC") {
+	case "foreignETH2BSC":
 		return "FORETH2BSC"
-	}
-	if strings.EqualFold(dbname, "USDT-alone") {
+	case "USDT-alone":
 		return "USDT2Fantom"
-	}
-	if strings.EqualFold(dbname, "ETH2ARBITRUM") {
+	case "ETH2ARBITRUM":
 		return "ETH2ARB"
+	case "Matic2MOONBEAM":
+		return "MATIC2MOONBEAM"
+	case "Matic2MOON":
+		return "MATIC2MOON"
+	case "Matic2OKT":
+		return "MATIC2OKT"
+	case "Matic2AVAX":
+		return "MATIC2AVAX"
+	case "Matic2BSC":
+		return "MATIC2BSC"
+	case "Matic2Harmony":
+		return "MATIC2Harmony"
+	case "BLOCK2Matic":
+		return "BLOCK2MATIC"
+	case "ETH2Goerli":
+		return "ETH2GOERLI"
+	case "Matic2ETH":
+		return "MATIC2ETH"
 	}
 	return dbname
 }
@@ -375,26 +389,39 @@ func GetMgoRouterDbname_0(dbname string) string {
 func GetLogRouterDbname_0(dbname string) string {
 	dbname = GetRealDbName(dbname)
 	fmt.Printf("setDbname, dbname: %v\n", dbname)
-	if strings.EqualFold(dbname, "Router-1029_#0") {
+	switch(dbname) {
+	case "Router-1029_#0":
 		return "Router-2_#0"
-	}
-	if strings.EqualFold(dbname, "Router-0715_#0") {
+	case "Router-0715_#0":
 		return "Router_#0"
-	}
-	if strings.EqualFold(dbname, "Router_#0") {
-		return "Router-invalid_#0"
-	}
-	if strings.EqualFold(dbname, "FORETH2Fantom") {
+	//case "Router_#0":
+	//	return "Router-discard_#0"
+	case "FORETH2Fantom":
 		return "foreignETH2Fantom"
-	}
-	if strings.EqualFold(dbname, "FORETH2BSC") {
+	case "FORETH2BSC":
 		return "foreignETH2BSC"
-	}
-	if strings.EqualFold(dbname, "USDT2Fantom") {
+	case "USDT2Fantom":
 		return "USDT-alone"
-	}
-	if strings.EqualFold(dbname, "ETH2ARB") {
+	case "ETH2ARB":
 		return "ETH2ARBITRUM"
+	case "MATIC2MOONBEAM":
+		return "Matic2MOONBEAM"
+	case "MATIC2MOON":
+		return "Matic2MOON"
+	case "MATIC2OKT":
+		return "Matic2OKT"
+	case "MATIC2AVAX":
+		return "Matic2AVAX"
+	case "MATIC2BSC":
+		return "Matic2BSC"
+	case "MATIC2Harmony":
+		return "Matic2Harmony"
+	case "BLOCK2MATIC":
+		return "BLOCK2Matic"
+	case "ETH2GOERLI":
+		return "ETH2Goerli"
+	case "MATIC2ETH":
+		return "Matic2ETH"
 	}
 	return dbname
 }

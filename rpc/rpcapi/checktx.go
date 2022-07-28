@@ -102,6 +102,7 @@ func getBridgeStatusInfo(dbname, status string, result *ResultStatus) {
 	if err == nil && len(res) != 0 {
 		var s GetStatusInfoResult
 		s = res
+		dbname = params.GetLogRouterDbname_0(dbname)
 		result.Data[dbname] = &s
 	}
 }
@@ -671,12 +672,13 @@ func getSwapinWithTime(dbname string, daytime uint64, result *ResultHistorySwap)
 	fmt.Printf("getSwapinWithTime, dbname: %v, daytime: %v\n", dbname, daytime)
 	res, err := swapapi.GetSwapinWithTime(dbname, daytime)
 	if err == nil && len(res) != 0 {
+		nametmp := params.GetLogRouterDbname_0(dbname)
 		dbname = params.GetMgoRouterDbname_0(dbname)
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
 		for _, st := range res {
 			addBridgeChainID(dbname, st)
 		}
-		bridgeData[dbname] = &res
+		bridgeData[nametmp] = &res
 		result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
 	}
 }
@@ -686,12 +688,13 @@ func getSwapoutWithTime(dbname string, daytime uint64, result *ResultHistorySwap
 	fmt.Printf("getSwapoutWithTime, dbname: %v, daytime: %v\n", dbname, daytime)
 	res, err := swapapi.GetSwapoutWithTime(dbname, daytime)
 	if err == nil && len(res) != 0 {
+		nametmp := params.GetLogRouterDbname_0(dbname)
 		dbname = params.GetMgoRouterDbname_0(dbname)
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
 		for _, st := range res {
 			addBridgeChainID(dbname, st)
 		}
-		bridgeData[dbname] = &res
+		bridgeData[nametmp] = &res
 		result.Data["bridge"] = append(result.Data["bridge"], bridgeData)
 	}
 }
@@ -701,11 +704,11 @@ func getSwapWithTime(dbname string, daytime uint64, result *ResultHistorySwap) {
 	fmt.Printf("getSwapWithTime, dbname: %v, daytime: %v\n", dbname, daytime)
 	res, err := swapapi.GetSwapWithTime(dbname, daytime)
 	if err == nil && len(res) != 0 {
-		dbname = params.GetLogRouterDbname_0(dbname)
 		var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
 		for _, st := range res {
 			updateRouterChainID(st)
 		}
+		dbname = params.GetLogRouterDbname_0(dbname)
 		bridgeData[dbname] = &res
 		result.Data["router"] = append(result.Data["router"], bridgeData)
 	}
