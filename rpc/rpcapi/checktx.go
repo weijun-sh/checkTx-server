@@ -376,7 +376,7 @@ func getChainSwap(r *http.Request, args *RouterSwapKeyArgs) (dbname *string, swa
 		}
 		if err == nil && res != nil {
 			var bridgeData map[string]interface{} = make(map[string]interface{}, 0)
-			nametmp := params.GetLogRouterDbname_0(*dbname)
+			nametmp := params.GetMgoRouterDbname_0(*dbname)
 			bridgeData[nametmp] = res
 			swaptx = res
 			data = append(data, bridgeData)

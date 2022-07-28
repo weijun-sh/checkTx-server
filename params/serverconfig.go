@@ -363,6 +363,9 @@ func GetMgoRouterDbname_0(dbname string) string {
 	if strings.EqualFold(dbname, "USDT-alone") {
 		return "USDT2Fantom"
 	}
+	if strings.EqualFold(dbname, "ETH2ARBITRUM") {
+		return "ETH2ARB"
+	}
 	return dbname
 }
 
@@ -383,6 +386,9 @@ func GetLogRouterDbname_0(dbname string) string {
 	}
 	if strings.EqualFold(dbname, "USDT2Fantom") {
 		return "USDT-alone"
+	}
+	if strings.EqualFold(dbname, "ETH2ARB") {
+		return "ETH2ARBITRUM"
 	}
 	return dbname
 }
