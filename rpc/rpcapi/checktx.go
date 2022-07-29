@@ -485,7 +485,7 @@ func getAddress4Contract(chainid, txid string) (*string, bool) {
 			isbridge = false
 		}
 	case swapinTopic:
-		fmt.Printf("getTransactionReceiptTo, isBridgeSwapin\n")
+		fmt.Printf("getTransactionReceiptTo, isBridgeSwapin, to: %v\n", to)
 		dbname = getDbname4Config(to)
 	}
 

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	checktxcommon "github.com/weijun-sh/checkTx-server/common"
 	"github.com/weijun-sh/checkTx-server/common/hexutil"
 	"github.com/weijun-sh/checkTx-server/log"
 	rpcclient "github.com/weijun-sh/checkTx-server/rpc/client"
@@ -107,14 +108,6 @@ func getTransactionReceiptTo(client *ethclient.Client, txHash common.Hash) (stri
 	for i := 0; i< 3; i++ {
 		receipt, err := client.TransactionReceipt(context.Background(), txHash)
 		if err == nil {
-			if len(receipt.Logs) == 0 {
-				tx, err := getTransaction(client, txHash)
-				if err == nil {
-					to := tx.To().String()
-					return to, "", swapinTopic, nil
-				}
-				return "", "", 0, errors.New("no receipt")
-			}
 			for _, log := range receipt.Logs {
 				//fmt.Printf("topic: %v\n", log.Topics[0])
 				logTopic := log.Topics[0].String()
@@ -130,13 +123,21 @@ func getTransactionReceiptTo(client *ethclient.Client, txHash common.Hash) (stri
 				}
 			}
 			for _, log := range receipt.Logs {
-				fmt.Printf("topic: %v\n", log.Topics[0])
 				logTopic := log.Topics[0].String()
-				if isSwapinTopic(logTopic) {
+				value := checktxcommon.GetBigInt(log.Data, 0, 64).Uint64()
+				//fmt.Printf("topic: %v, data: %v, value: %v\n", log.Topics, string(log.Data), value)
+				if value > 0 && isSwapinTopic(logTopic) {
 					return string(common.BytesToAddress(log.Topics[2][:]).Hex()), string(common.BytesToAddress(log.Topics[1][:]).Hex()), swapinTopic, nil
 				}
 			}
-			return "", "", 0, errors.New("get receipt topic mismatch")
+
+			// return to
+			tx, err := getTransaction(client, txHash)
+			if err == nil {
+				to := tx.To().String()
+				return to, "", swapinTopic, nil
+			}
+			return "", "", 0, errors.New("no receipt")
 		}
 		//fmt.Printf("getTransactionReceiptTo, txHash: %v, err: %v\n", txHash, err)
 		time.Sleep(1 * time.Second)
